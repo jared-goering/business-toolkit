@@ -132,3 +132,23 @@
   background-image: radial-gradient(#2f2f2f 2px, transparent 2px);
   background-size: 38px 38px; /* Increase to reduce dot density */
 }
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #141414; 
+}
+
+@keyframes spinOnce {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spin-once {
+  animation: spinOnce 0.5s ease-in-out forwards;
+}
