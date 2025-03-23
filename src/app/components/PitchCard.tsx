@@ -17,6 +17,9 @@ export default function PitchCard({ pitch, onRegenerate, onClose }: PitchCardPro
   const [thumbsHover, setThumbsHover] = useState(false);
   const [regenerateHover, setRegenerateHover] = useState(false);
 
+  // NEW: controls whether bottom buttons are visible
+  const [buttonsVisible, setButtonsVisible] = useState(true);
+
   const handleRegenerateClick = () => {
     setShowContextInput(true);
   };
@@ -30,6 +33,13 @@ export default function PitchCard({ pitch, onRegenerate, onClose }: PitchCardPro
     onRegenerate(additionalContext);
     setShowContextInput(false);
     setAdditionalContext('');
+  };
+
+  const handleLooksGoodClick = () => {
+    // Hide the bottom buttons
+    setButtonsVisible(false);
+    // Also call the parent's callback
+    onClose();
   };
 
   return (
@@ -46,39 +56,41 @@ export default function PitchCard({ pitch, onRegenerate, onClose }: PitchCardPro
             {pitch || 'Your AI-generated pitch will appear here...'}
           </p>
 
-          {!showContextInput ? (
+          {buttonsVisible && !showContextInput ? (
+            // Original "Regenerate" + "Looks Good" row
             <div className="flex gap-2 w-full pt-4">
-              {/* Regenerate Button with local state for animation */}
               <Button
-  onMouseEnter={() => setRegenerateHover(true)}
-  onMouseLeave={() => setRegenerateHover(false)}
-  className="
-    flex-1
-    flex
-    items-center
-    justify-center
-    rounded-full
-    border
-    border-[#292929]
-    bg-[#292929]
-    text-[#FDE03B]
-    font-semibold
-    hover:bg-[#FDE03B]/10
-    transition-colors
-    duration-200
-  "
-  onClick={handleRegenerateClick}
->
-  <ArrowsClockwise
-    className="mr-2"
-    style={regenerateHover ? { animation: 'spinOnce 0.5s ease-in-out forwards' } : {}}
-    size={20}
-  />
-  Regenerate
-</Button>
+                onMouseEnter={() => setRegenerateHover(true)}
+                onMouseLeave={() => setRegenerateHover(false)}
+                className="
+                  flex-1
+                  flex
+                  items-center
+                  justify-center
+                  rounded-full
+                  border
+                  border-[#292929]
+                  bg-[#292929]
+                  text-[#FDE03B]
+                  font-semibold
+                  hover:bg-[#FDE03B]/10
+                  transition-colors
+                  duration-200
+                "
+                onClick={handleRegenerateClick}
+              >
+                <ArrowsClockwise
+                  className="mr-2"
+                  style={
+                    regenerateHover
+                      ? { animation: 'spinOnce 0.5s ease-in-out forwards' }
+                      : {}
+                  }
+                  size={20}
+                />
+                Regenerate
+              </Button>
 
-
-              {/* Looks Good Button */}
               <Button
                 onMouseEnter={() => setThumbsHover(true)}
                 onMouseLeave={() => setThumbsHover(false)}
@@ -97,7 +109,7 @@ export default function PitchCard({ pitch, onRegenerate, onClose }: PitchCardPro
                   transition-colors
                   duration-200
                 "
-                onClick={onClose}
+                onClick={handleLooksGoodClick}
               >
                 <ThumbsUp
                   className="mr-2"
@@ -107,7 +119,8 @@ export default function PitchCard({ pitch, onRegenerate, onClose }: PitchCardPro
                 Looks Good
               </Button>
             </div>
-          ) : (
+          ) : buttonsVisible && showContextInput ? (
+            // "Submit Context" row
             <div className="mt-4">
               <div className="flex gap-2 items-center">
                 <input
@@ -161,7 +174,8 @@ export default function PitchCard({ pitch, onRegenerate, onClose }: PitchCardPro
                 Back
               </Button>
             </div>
-          )}
+          ) : null /* If !buttonsVisible, hide everything */
+          }
         </CardContent>
       </Card>
     </div>
