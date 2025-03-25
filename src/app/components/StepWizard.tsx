@@ -82,19 +82,75 @@ export default function StepWizard({
   }
 
   return (
-    <>
-      {/* 
-        Responsive grid:
-        - 1 column on small screens
-        - 3 columns on md+ screens
-      */}
-      <section className="relative grid grid-cols-1 md:grid-cols-3 gap-8 pt-10">
-        
-        {/* Card 1 (visible if currentStep >= 1) */}
+    
+    <div className="relative flex flex-col items-center w-full">
+
+{currentStep >= 4 && (
+  <>
+    {/* Left bracket */}
+    <div className="absolute w-[523px] h-[101px] left-0 right-[325px] mx-auto top-[215px] pointer-events-none">
+      <svg
+        width="423"
+        height="145"
+        viewBox="0 0 523 101"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M3 0V0C3 35.3462 31.6538 64 67 64H483C503.435 64 520 80.5655 520 101V101"
+          stroke="#3F3F3F"
+          strokeWidth="5"
+        />
+      </svg>
+    </div>
+
+    {/* Right bracket (flipped) */}
+    <div
+      className="absolute w-[523px] h-[101px] left-[325px] right-0 mx-auto top-[215px] pointer-events-none"
+      style={{
+        transform: 'scaleX(-1)',
+        transformOrigin: 'center',
+      }}
+    >
+      <svg
+        width="423"
+        height="145"
+        viewBox="0 0 523 101"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M3 0V0C3 35.3462 31.6538 64 67 64H483C503.435 64 520 80.5655 520 101V101"
+          stroke="#3F3F3F"
+          strokeWidth="5"
+        />
+      </svg>
+    </div>
+  </>
+)}
+
+
+      
+      {/* Horizontal line behind the 3 cards (only on md+) */}
+      {currentStep >= 4 && (
+        <div
+            className="
+            md:block
+            absolute
+            top-[145px]
+            left-[10%]
+            right-[10%]
+            h-[5px]
+            bg-[#3F3F3F]
+            "
+        />
+        )}
+      <section className="relative grid grid-cols-1 md:grid-cols-3 gap-8 pt-10 mb-16 w-full">
+        {/* Card 1 */}
         {currentStep >= 1 && (
           <Card className="bg-[#1C1C1C] rounded-3xl border-[#3F3F3F] py-1 px-1">
-            <CardHeader className="pt-5 pb-4">
-              <CardTitle className="text-[15px] text-[#EFEFEF] text-center leading-tight m-0">
+            <CardHeader className="pt-8 pb-1">
+              <CardTitle className="text-[17px] text-[#EFEFEF] text-center leading-tight m-0">
                 What is your company going to make?
               </CardTitle>
             </CardHeader>
@@ -104,16 +160,18 @@ export default function StepWizard({
                 placeholder="e.g. AI-powered fitness app"
                 value={company}
                 onChange={(e) => setCompany(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey && notEmpty(company)) {
+                    e.preventDefault();
+                    setCurrentStep(2);
+                  }
+                }}
               />
               {currentStep === 1 && (
                 <div className="flex justify-end mt-4">
                   <NextArrowButton
                     canProceed={notEmpty(company)}
-                    onClick={() => {
-                      if (notEmpty(company)) {
-                        setCurrentStep(2);
-                      }
-                    }}
+                    onClick={() => notEmpty(company) && setCurrentStep(2)}
                   />
                 </div>
               )}
@@ -121,11 +179,11 @@ export default function StepWizard({
           </Card>
         )}
 
-        {/* Card 2 (visible if currentStep >= 2) */}
+        {/* Card 2 */}
         {currentStep >= 2 && (
           <Card className="bg-[#1C1C1C] rounded-3xl border-[#3F3F3F] py-1 px-1">
-            <CardHeader className="pt-5 pb-4">
-              <CardTitle className="text-[15px] text-[#EFEFEF] text-center leading-tight m-0">
+            <CardHeader className="pt-8 pb-1">
+            <CardTitle className="text-[17px] text-[#EFEFEF] text-center leading-tight m-0">
                 What problem does it solve?
               </CardTitle>
             </CardHeader>
@@ -135,17 +193,19 @@ export default function StepWizard({
                 placeholder="e.g. Personalized workout plans"
                 value={problem}
                 onChange={(e) => setProblem(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey && notEmpty(problem)) {
+                    e.preventDefault();
+                    setCurrentStep(3);
+                  }
+                }}
               />
               {currentStep === 2 && (
                 <div className="flex justify-between mt-4">
                   <BackArrowButton onClick={() => setCurrentStep(1)} />
                   <NextArrowButton
                     canProceed={notEmpty(problem)}
-                    onClick={() => {
-                      if (notEmpty(problem)) {
-                        setCurrentStep(3);
-                      }
-                    }}
+                    onClick={() => notEmpty(problem) && setCurrentStep(3)}
                   />
                 </div>
               )}
@@ -153,11 +213,11 @@ export default function StepWizard({
           </Card>
         )}
 
-        {/* Card 3 (visible if currentStep >= 3) */}
+        {/* Card 3 */}
         {currentStep >= 3 && (
           <Card className="bg-[#1C1C1C] rounded-3xl border-[#3F3F3F] py-1 px-1">
-            <CardHeader className="pt-5 pb-4">
-              <CardTitle className="text-[15px] text-[#EFEFEF] text-center leading-tight m-0">
+            <CardHeader className="pt-8 pb-1">
+            <CardTitle className="text-[17px] text-[#EFEFEF] text-center leading-tight m-0">
                 Who are your target customers?
               </CardTitle>
             </CardHeader>
@@ -167,17 +227,19 @@ export default function StepWizard({
                 placeholder="e.g. Health-conscious individuals"
                 value={customers}
                 onChange={(e) => setCustomers(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey && notEmpty(customers)) {
+                    e.preventDefault();
+                    setCurrentStep(4);
+                  }
+                }}
               />
               {currentStep === 3 && (
                 <div className="flex justify-between mt-4">
                   <BackArrowButton onClick={() => setCurrentStep(2)} />
                   <NextArrowButton
                     canProceed={notEmpty(customers)}
-                    onClick={() => {
-                      if (notEmpty(customers)) {
-                        setCurrentStep(4);
-                      }
-                    }}
+                    onClick={() => notEmpty(customers) && setCurrentStep(4)}
                   />
                 </div>
               )}
@@ -186,9 +248,21 @@ export default function StepWizard({
         )}
       </section>
 
-      {/* Step 4 => Generate Summary */}
+      {/* The vertical line from the middle card to the button (only on md+) */}
       {currentStep >= 4 && (
-        <div className="flex justify-center">
+        <div className="relative w-full flex justify-center">
+          {/* <div
+            className="
+              hidden md:block
+              absolute
+              w-[2px]
+              bg-[#FDE03B]
+              h-16
+              top-[-2rem]
+              left-1/2
+              transform -translate-x-1/2
+            "
+          /> */}
           <Button
             onMouseEnter={() => setButtonHover(true)}
             onMouseLeave={() => setButtonHover(false)}
@@ -198,7 +272,7 @@ export default function StepWizard({
               items-center
               justify-center
               mt-4
-              px-14
+              px-20
               py-2
               rounded-full
               border
@@ -209,6 +283,7 @@ export default function StepWizard({
               hover:bg-[#FDE03B]/30
               transition-colors
               duration-200
+              zIndex: 900
             "
           >
             {loading ? (
@@ -229,6 +304,6 @@ export default function StepWizard({
           </Button>
         </div>
       )}
-    </>
+    </div>
   );
 }

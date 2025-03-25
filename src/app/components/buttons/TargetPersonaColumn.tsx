@@ -33,15 +33,13 @@ export default function TargetPersonaColumn({
   customers,
 }: TargetPersonaProps) {
   const [personas, setPersonas] = useState<Persona[] | null>(null);
-  const [loadingTarget, setLoadingTarget] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const [minimized, setMinimized] = useState(false);
-
-  // For the sparkle icon hover
-  const [hoverPersonaSparkle, setHoverPersonaSparkle] = useState(false);
+  const [hoverSparkle, setHoverSparkle] = useState(false);
 
   const handleIdeateTargetPersona = async () => {
-    setLoadingTarget(true);
+    setLoading(true);
     setPersonas(null);
     try {
       const response = await fetch('/api/ideate-target-persona', {
@@ -51,11 +49,11 @@ export default function TargetPersonaColumn({
       });
       const data = await response.json();
       setPersonas(data.personas);
-      setMinimized(false); // expand card on load
+      setMinimized(false);
     } catch (error) {
       console.error('Error generating target personas:', error);
     } finally {
-      setLoadingTarget(false);
+      setLoading(false);
     }
   };
 
@@ -76,58 +74,26 @@ export default function TargetPersonaColumn({
   };
 
   return (
-    <div className="flex flex-col items-center">
-      <Button
-        onMouseEnter={() => setHoverPersonaSparkle(true)}
-        onMouseLeave={() => setHoverPersonaSparkle(false)}
-        onClick={handleIdeateTargetPersona}
-        className="
-          rounded-full
-          w-5/6
-          px-6
-          py-2
-          border
-          border-[#00FFFF]
-          bg-[#1C1C1C]
-          text-[#00FFFF]
-          hover:bg-[#00FFFF]/30
-          hover:border-[#00FFFF]
-          transition-colors
-          duration-200
-        "
-      >
-        {loadingTarget ? (
-          <span className="flex items-center">
-            <Spinner size={20} className="mr-2 animate-spin" />
-            Loading personas...
-          </span>
-        ) : (
-          <span className="flex items-center">
-            <Sparkle
-              size={32}
-              weight={hoverPersonaSparkle ? 'fill' : 'bold'}
-              className="mr-2"
-            />
-            Ideate Target Persona
-          </span>
-        )}
-      </Button>
-
-      {personas && Array.isArray(personas) && (
-        <Card className="bg-[#1C1C1C] rounded-3xl border-[#3F3F3F] py-1 px-1 mt-12 w-full mb-5">
+    <div className="w-full flex flex-col items-center">
+      {personas ? (
+        // If data exists, render the result container
+        <Card className="bg-[#1C1C1C] rounded-3xl border-[#00FFFF] py-1 px-1 w-full mb-5">
           <CardHeader className="pt-3 pb-2">
             <div className="flex items-center justify-center">
-              <CardTitle className="text-[17px] text-[#EFEFEF] leading-tight m-0 inline-block mr-2">
+              <CardTitle className="text-[17px] text-[#00FFFF] leading-tight m-0 inline-block mr-2 text-center">
                 Potential Personas
               </CardTitle>
               <button
-                onClick={() => setMinimized(!minimized)}
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent re-triggering the API call
+                  setMinimized(!minimized);
+                }}
                 className="focus:outline-none"
               >
                 {minimized ? (
-                  <CaretDown size={24} className="text-gray-400" />
+                  <CaretDown size={24} className="text-[#00FFFF]" />
                 ) : (
-                  <CaretUp size={24} className="text-gray-400" />
+                  <CaretUp size={24} className="text-[#00FFFF]" />
                 )}
               </button>
             </div>
@@ -135,7 +101,7 @@ export default function TargetPersonaColumn({
           {!minimized && (
             <CardContent className="p-2 pt-0 space-y-4">
               <p className="text-sm text-gray-400 text-center">
-                Drag to Rank these in order of most relevant
+                Drag to rank these in order of most relevant
               </p>
               {personas.map((persona, i) => (
                 <div
@@ -158,11 +124,8 @@ export default function TargetPersonaColumn({
                         items-center
                         justify-center
                         rounded-full
-                        border
-                        border-gray-300
-                        text-gray-300
-                        text-sm
-                        font-bold
+                        border border-gray-300
+                        text-gray-300 text-sm font-bold
                       "
                     >
                       {i + 1}
@@ -195,6 +158,42 @@ export default function TargetPersonaColumn({
             </CardContent>
           )}
         </Card>
+      ) : (
+        // Otherwise, render a full-width button as the trigger
+        <Button
+          onMouseEnter={() => setHoverSparkle(true)}
+          onMouseLeave={() => setHoverSparkle(false)}
+          onClick={handleIdeateTargetPersona}
+          className="
+            w-full
+            rounded-full
+            px-6
+            py-2
+            border border-[#00FFFF]
+            bg-[#1C1C1C]
+            text-[#00FFFF]
+            hover:bg-[#00FFFF]/30 hover:border-[#00FFFF]
+            transition-colors duration-200
+            flex items-center justify-center
+            mb-5
+          "
+        >
+          {loading ? (
+            <span className="flex items-center">
+              <Spinner size={20} className="mr-2 animate-spin" />
+              Loading personas...
+            </span>
+          ) : (
+            <span className="flex items-center">
+              <Sparkle
+                size={32}
+                weight={hoverSparkle ? 'fill' : 'bold'}
+                className="mr-2"
+              />
+              Ideate Target Persona
+            </span>
+          )}
+        </Button>
       )}
     </div>
   );

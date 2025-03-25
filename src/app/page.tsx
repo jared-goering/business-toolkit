@@ -84,7 +84,35 @@ export default function HomePage() {
 
         {/* The PitchCard (appears after pitch is generated) */}
         {showCard && (
-          <>
+    <>
+      {/* The decorative line */}
+      <div 
+        className="absolute pointer-events-none" 
+        style={{
+          // Adjust these to position the line
+          top: '612px', 
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '200px',
+          height: '150px',
+          zIndex: 1
+        }}
+      >
+        <svg
+          width="200"
+          height="64"
+          viewBox="0 0 200 65"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          {/* Example cubic Bézier curve from top center -> bottom center */}
+          <path
+            d="M 100 0 C 100 50, 100 50, 100 150"
+            stroke="#3F3F3F"
+            strokeWidth="4"
+          />
+        </svg>
+      </div>
             <PitchCard
               pitch={pitch}
               onRegenerate={handleRegenerate}

@@ -44,11 +44,9 @@ export default function CustomerPainPointsColumn({
   // Convert your `customerPainPoints` into an array of bullet items
   let bulletPoints: string[] = [];
   if (customerPainPoints) {
-    // If it's already an array, use it directly
     if (Array.isArray(customerPainPoints)) {
       bulletPoints = customerPainPoints;
     } else {
-      // Otherwise, split on newlines and trim
       bulletPoints = customerPainPoints
         .split('\n')
         .map((line) => line.trim())
@@ -57,67 +55,32 @@ export default function CustomerPainPointsColumn({
   }
 
   return (
-    <div className="flex flex-col items-center">
-      <Button
-        onMouseEnter={() => setHoverPainPointsSparkle(true)}
-        onMouseLeave={() => setHoverPainPointsSparkle(false)}
-        onClick={handleIdeateCustomerPainPoints}
-        className="
-          rounded-full
-          w-5/6
-          px-6
-          py-2
-          border
-          border-[#00FFFF]
-          bg-[#1C1C1C]
-          text-[#00FFFF]
-          hover:bg-[#00FFFF]/30
-          hover:border-[#00FFFF]
-          transition-colors
-          duration-200
-        "
-      >
-        {loadingPainPoints ? (
-          <span className="flex items-center">
-            <Spinner size={20} className="mr-2 animate-spin" />
-            Loading pain points...
-          </span>
-        ) : (
-          <span className="flex items-center">
-            <Sparkle
-              size={32}
-              weight={hoverPainPointsSparkle ? 'fill' : 'bold'}
-              className="mr-2"
-            />
-            Ideate Customers' Pain Points
-          </span>
-        )}
-      </Button>
-
-      {/* If we have results, show them in a card */}
-      {customerPainPoints && (
-        <Card className="bg-[#1C1C1C] rounded-3xl border-[#3F3F3F] py-1 px-1 mt-12 w-full mb-5">
+    <div className="w-full flex flex-col items-center">
+      {customerPainPoints ? (
+        // When result exists, render a Card (which takes over the button's space)
+        <Card className="bg-[#1C1C1C] rounded-3xl border-[#00FFFF] py-1 px-1 w-full mb-5">
           <CardHeader className="pt-3 pb-2">
             <div className="flex items-center justify-center">
-              <CardTitle className="text-[17px] text-[#EFEFEF] leading-tight m-0 inline-block mr-2 text-center">
+              <CardTitle className="text-[17px] text-[#00FFFF] leading-tight m-0 inline-block mr-2 text-center">
                 Customer Pain Points
               </CardTitle>
               <button
-                onClick={() => setMinimizedPain(!minimizedPain)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setMinimizedPain(!minimizedPain);
+                }}
                 className="focus:outline-none"
               >
                 {minimizedPain ? (
-                  <CaretDown size={24} className="text-gray-400" />
+                  <CaretDown size={24} className="text-[#00FFFF]" />
                 ) : (
-                  <CaretUp size={24} className="text-gray-400" />
+                  <CaretUp size={24} className="text-[#00FFFF]" />
                 )}
               </button>
             </div>
           </CardHeader>
-
           {!minimizedPain && (
-            <CardContent className="p-4 space-y-3">
-              {/* Render each bullet as its own sub-card */}
+            <CardContent className="p-2 space-y-3">
               {bulletPoints.map((point, idx) => (
                 <Card
                   key={idx}
@@ -129,6 +92,47 @@ export default function CustomerPainPointsColumn({
             </CardContent>
           )}
         </Card>
+      ) : (
+        // When no result yet, render the button as the trigger
+        <Button
+          onMouseEnter={() => setHoverPainPointsSparkle(true)}
+          onMouseLeave={() => setHoverPainPointsSparkle(false)}
+          onClick={handleIdeateCustomerPainPoints}
+          className="
+            w-full
+            rounded-full
+            px-6
+            py-2
+            border
+            border-[#00FFFF]
+            bg-[#1C1C1C]
+            text-[#00FFFF]
+            hover:bg-[#00FFFF]/30
+            hover:border-[#00FFFF]
+            transition-colors
+            duration-200
+            flex
+            items-center
+            justify-center
+            mb-5
+          "
+        >
+          {loadingPainPoints ? (
+            <span className="flex items-center">
+              <Spinner size={20} className="mr-2 animate-spin" />
+              Loading pain points...
+            </span>
+          ) : (
+            <span className="flex items-center">
+              <Sparkle
+                size={32}
+                weight={hoverPainPointsSparkle ? 'fill' : 'bold'}
+                className="mr-2"
+              />
+              Ideate Customers' Pain Points
+            </span>
+          )}
+        </Button>
       )}
     </div>
   );

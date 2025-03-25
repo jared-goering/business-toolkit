@@ -13,7 +13,7 @@ interface ValuePropMappingProps {
   customers: string;
 }
 
-// (Optional) remove "# Value Proposition Mapping" at top
+// Remove top heading if it exists
 function removeFirstHeading(markdown: string): string {
   const lines = markdown.split('\n');
   if (lines.length && lines[0].match(/^#\s+Value Proposition Mapping/i)) {
@@ -22,42 +22,36 @@ function removeFirstHeading(markdown: string): string {
   return lines.join('\n').trim();
 }
 
-// Our parser for splitting on each "## Some Heading"
+// Split the markdown into sections at each "## Some Heading"
 function parseSections(markdown: string) {
   const lines = markdown.split('\n');
   const sections: { heading: string; content: string[] }[] = [];
-
   let currentHeading = '';
   let currentContent: string[] = [];
-
   for (const line of lines) {
     const match = line.match(/^##\s+(.*)/);
     if (match) {
-      // push old
       if (currentHeading || currentContent.length > 0) {
         sections.push({ heading: currentHeading, content: currentContent });
       }
-      // start new
       currentHeading = match[1].trim();
       currentContent = [];
     } else {
       currentContent.push(line);
     }
   }
-  // push last
   if (currentHeading || currentContent.length > 0) {
     sections.push({ heading: currentHeading, content: currentContent });
   }
-
   return sections;
 }
 
 function removeEmptyLines(raw: string): string {
-    return raw
-      .split('\n')
-      .filter(line => line.trim() !== '') // keep only non-empty lines
-      .join('\n'); // rejoin with single line breaks
-  }
+  return raw
+    .split('\n')
+    .filter(line => line.trim() !== '')
+    .join('\n');
+}
 
 export default function ValuePropositionMappingColumn({
   pitch,
@@ -73,7 +67,6 @@ export default function ValuePropositionMappingColumn({
   async function handleIdeateValuePropMapping() {
     setLoadingValueMapping(true);
     setValueMapping(null);
-
     try {
       const response = await fetch('/api/ideate-value-proposition', {
         method: 'POST',
@@ -81,13 +74,8 @@ export default function ValuePropositionMappingColumn({
         body: JSON.stringify({ pitch, company, problem, customers }),
       });
       const data = await response.json();
-
-      // Remove top heading if it exists
-    //   const cleaned = removeFirstHeading(data.valueMapping || '');
       let cleaned = removeFirstHeading(data.valueMapping || '');
       cleaned = removeEmptyLines(cleaned);
-
-
       setValueMapping(cleaned);
       console.log('Cleaned GPT output:', cleaned);
     } catch (error) {
@@ -97,7 +85,7 @@ export default function ValuePropositionMappingColumn({
     }
   }
 
-  // If we have markdown, split it into sections
+  // Parse sections if needed (for further customization)
   let sections: { heading: string; content: string[] }[] = [];
   if (valueMapping) {
     sections = parseSections(valueMapping);
@@ -105,48 +93,14 @@ export default function ValuePropositionMappingColumn({
   }
 
   return (
-    <div className="flex flex-col items-center">
-      <Button
-        onMouseEnter={() => setHoverValuePropSparkle(true)}
-        onMouseLeave={() => setHoverValuePropSparkle(false)}
-        onClick={handleIdeateValuePropMapping}
-        className="
-          rounded-full
-          w-5/6
-          px-6
-          py-2
-          border
-          border-[#00FFFF]
-          bg-[#1C1C1C]
-          text-[#00FFFF]
-          hover:bg-[#00FFFF]/30
-          hover:border-[#00FFFF]
-          transition-colors
-          duration-200
-        "
-      >
-        {loadingValueMapping ? (
-          <span className="flex items-center">
-            <Spinner size={20} className="mr-2 animate-spin" />
-            Loading value prop...
-          </span>
-        ) : (
-          <span className="flex items-center">
-            <Sparkle
-              size={32}
-              weight={hoverValuePropSparkle ? 'fill' : 'bold'}
-              className="mr-2"
-            />
-            Value Proposition Mapping
-          </span>
-        )}
-      </Button>
-
-      {valueMapping && (
-        <Card className="bg-[#1C1C1C] rounded-3xl border-[#3F3F3F] py-1 px-1 mt-12 w-full mb-5">
+    <div className="w-full flex flex-col items-center">
+      {/* Conditionally render either the button or the result box */}
+      {valueMapping ? (
+        // When a result exists, show a Card that acts as the expanded result box
+        <Card className="bg-[#1C1C1C] rounded-3xl border-[#00FFFF] py-1 px-1 w-full mb-5">
           <CardHeader className="pt-3 pb-2">
             <div className="flex items-center justify-center">
-              <CardTitle className="text-[17px] text-[#EFEFEF] leading-tight m-0 inline-block mr-2 text-center">
+              <CardTitle className="text-[17px] text-[#EFEFEF] leading-tight m-0 inline-block mr-2 text-center text-[#00FFFF]">
                 Value Proposition
               </CardTitle>
               <button
@@ -154,60 +108,94 @@ export default function ValuePropositionMappingColumn({
                 className="focus:outline-none"
               >
                 {minimizedValue ? (
-                  <CaretDown size={24} className="text-gray-400" />
+                  <CaretDown size={24} className="text-[#00FFFF]" />
                 ) : (
-                  <CaretUp size={24} className="text-gray-400" />
+                  <CaretUp size={24} className="text-[#00FFFF]" />
                 )}
               </button>
             </div>
           </CardHeader>
-
           {!minimizedValue && (
-            <CardContent className="p-2 space-y-6 ">
-              {/* For each "## Heading" section, render a sub-card or box */}
+            <CardContent className="p-2 space-y-3">
               {sections.map((section, idx) => (
                 <Card
                   key={idx}
                   className="border border-[#3F3F3F] bg-[#2F2F2F] rounded-xl p-3"
                 >
-                  {/* The heading from GPT (like "Customer Segment", "Problem", etc.) */}
                   <h2 className="text-xl font-bold text-[#EFEFEF] p-0 m-0">
                     {section.heading}
                   </h2>
-
-                  {/* Render the lines under that heading as Markdown */}
                   <ReactMarkdown
-  components={{
-    // Hide or override nested h2 if you want
-    h2: () => null,
-    // Now override h3:
-    h3: ({ children }) => (
-      <h3 className="text-l p-0 m-0 text-[#EFEFEF] font-semibold mb-1">
-        {children}
-      </h3>
-    ),
-    ul: ({ children }) => (
-      <ul className="list-disc list-inside ml-2 text-sm text-[#EFEFEF]">
-        {children}
-      </ul>
-    ),
-    li: ({ children }) => (
-        <li className="m-0 p-0 leading-normal">{children}</li>
-      ),
-    p: ({ children }) => (
-        <p className="m-0 p-0 text-sm text-[#EFEFEF] leading-normal">
-          {children}
-        </p>
-    ),
-  }}
->
-  {section.content.join('\n')}
-</ReactMarkdown>
+                    components={{
+                      h2: () => null,
+                      h3: ({ children }) => (
+                        <h3 className="text-l p-0 m-0 text-[#EFEFEF] font-semibold mb-1">
+                          {children}
+                        </h3>
+                      ),
+                      ul: ({ children }) => (
+                        <ul className="list-disc list-inside ml-2 text-sm text-[#EFEFEF]">
+                          {children}
+                        </ul>
+                      ),
+                      li: ({ children }) => (
+                        <li className="m-0 p-0 leading-normal">{children}</li>
+                      ),
+                      p: ({ children }) => (
+                        <p className="m-0 p-0 text-sm text-[#EFEFEF] leading-normal">
+                          {children}
+                        </p>
+                      ),
+                    }}
+                  >
+                    {section.content.join('\n')}
+                  </ReactMarkdown>
                 </Card>
               ))}
             </CardContent>
           )}
         </Card>
+      ) : (
+        // Otherwise, show the button that triggers the API call
+        <Button
+          onMouseEnter={() => setHoverValuePropSparkle(true)}
+          onMouseLeave={() => setHoverValuePropSparkle(false)}
+          onClick={handleIdeateValuePropMapping}
+          className="
+            w-full
+            rounded-full
+            px-6
+            py-2
+            border
+            border-[#00FFFF]
+            bg-[#1C1C1C]
+            text-[#00FFFF]
+            hover:bg-[#00FFFF]/30
+            hover:border-[#00FFFF]
+            transition-colors
+            duration-200
+            flex
+            items-center
+            justify-center
+            mb-5
+          "
+        >
+          {loadingValueMapping ? (
+            <span className="flex items-center">
+              <Spinner size={20} className="mr-2 animate-spin" />
+              Loading value prop...
+            </span>
+          ) : (
+            <span className="flex items-center">
+              <Sparkle
+                size={32}
+                weight={hoverValuePropSparkle ? 'fill' : 'bold'}
+                className="mr-2"
+              />
+              Value Proposition Mapping
+            </span>
+          )}
+        </Button>
       )}
     </div>
   );
