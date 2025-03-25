@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import StepWizard from './components/StepWizard';
 import PitchCard from './components/PitchCard';
 import ExtraButtons from './components/ExtraButtons';
+import { motion } from 'framer-motion';
 
 export default function HomePage() {
   // Form fields
@@ -84,50 +85,67 @@ export default function HomePage() {
 
         {/* The PitchCard (appears after pitch is generated) */}
         {showCard && (
-    <>
-      {/* The decorative line */}
-      <div 
-        className="absolute pointer-events-none" 
-        style={{
-          // Adjust these to position the line
-          top: '612px', 
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: '200px',
-          height: '150px',
-          zIndex: 1
-        }}
-      >
-        <svg
-          width="200"
-          height="64"
-          viewBox="0 0 200 65"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          {/* Example cubic Bézier curve from top center -> bottom center */}
-          <path
-            d="M 100 0 C 100 50, 100 50, 100 150"
-            stroke="#3F3F3F"
-            strokeWidth="4"
-          />
-        </svg>
-      </div>
-            <PitchCard
-              pitch={pitch}
-              onRegenerate={handleRegenerate}
-              onClose={handleLooksGood} 
-              // "Looks Good" => show extra buttons
-            />
+          <>
+            {/* The decorative line with animation */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+              className="absolute pointer-events-none hidden md:block" 
+              style={{
+                top: '612px', 
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '200px',
+                height: '150px',
+                zIndex: 1
+              }}
+            >
+              <svg
+                width="200"
+                height="64"
+                viewBox="0 0 200 65"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <motion.path
+                  d="M 100 0 C 100 50, 100 50, 100 150"
+                  stroke="#3F3F3F"
+                  strokeWidth="4"
+                  initial={{ pathLength: 0 }}
+                  animate={{ pathLength: 1 }}
+                  transition={{ duration: 0.8, ease: "easeInOut" }}
+                />
+              </svg>
+            </motion.div>
+
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.4, duration: 0.5 }}
+            >
+              <PitchCard
+                pitch={pitch}
+                onRegenerate={handleRegenerate}
+                onClose={handleLooksGood} 
+                // "Looks Good" => show extra buttons
+              />
+            </motion.div>
 
             {/* Show extra buttons below the pitch card */}
             {showExtraButtons && (
-              <ExtraButtons
-                pitch={pitch}
-                company={company}
-                problem={problem}
-                customers={customers}
-              />
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.5 }}
+              >
+                <ExtraButtons
+                  pitch={pitch}
+                  company={company}
+                  problem={problem}
+                  customers={customers}
+                />
+              </motion.div>
             )}
           </>
         )}

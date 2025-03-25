@@ -101,7 +101,7 @@ export default function ValuePropositionMappingColumn({
           <CardHeader className="pt-3 pb-2">
             <div className="flex items-center justify-center">
               <CardTitle className="text-[17px] text-[#EFEFEF] leading-tight m-0 inline-block mr-2 text-center text-[#00FFFF]">
-                Value Proposition
+                Value Proposition Map
               </CardTitle>
               <button
                 onClick={() => setMinimizedValue(!minimizedValue)}
