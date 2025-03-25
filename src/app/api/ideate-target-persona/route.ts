@@ -26,7 +26,7 @@ Generate 4 distinct customer personas. For each persona, include:
 Return the result as a valid JSON array of 4 objects, each with the keys: "name", "ageRange", "interests", and "description".`;
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o', // or 'gpt-4' if available
+      model: 'gpt-4o', 
       messages: [
         {
           role: 'system',
