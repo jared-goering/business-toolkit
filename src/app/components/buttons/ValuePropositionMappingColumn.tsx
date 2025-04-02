@@ -3,8 +3,11 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CaretDown, CaretUp, Sparkle, Spinner } from 'phosphor-react';
+import { CaretDown, CaretUp, Sparkle, Spinner, X, Eye } from 'phosphor-react';
 import ReactMarkdown from 'react-markdown';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
+import Masonry from 'react-masonry-css';
 
 interface ValuePropMappingProps {
   pitch: string;
@@ -63,8 +66,15 @@ export default function ValuePropositionMappingColumn({
   const [loadingValueMapping, setLoadingValueMapping] = useState(false);
   const [minimizedValue, setMinimizedValue] = useState(false);
   const [hoverValuePropSparkle, setHoverValuePropSparkle] = useState(false);
+  const [hoverViewResults, setHoverViewResults] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
 
   async function handleIdeateValuePropMapping() {
+    if (valueMapping) {
+      setModalOpen(true);
+      return;
+    }
+    
     setLoadingValueMapping(true);
     setValueMapping(null);
     try {
@@ -78,12 +88,18 @@ export default function ValuePropositionMappingColumn({
       cleaned = removeEmptyLines(cleaned);
       setValueMapping(cleaned);
       console.log('Cleaned GPT output:', cleaned);
+      setModalOpen(true);
     } catch (error) {
       console.error('Error generating value proposition mapping:', error);
     } finally {
       setLoadingValueMapping(false);
     }
   }
+
+  const handleRegenerateValueMapping = () => {
+    setValueMapping(null);
+    handleIdeateValuePropMapping();
+  };
 
   // Parse sections if needed (for further customization)
   let sections: { heading: string; content: string[] }[] = [];
@@ -92,85 +108,30 @@ export default function ValuePropositionMappingColumn({
     console.log('Parsed sections:', sections);
   }
 
+  // Breakpoint for masonry layout
+  const breakpointColumnsObj = {
+    default: 3,
+    1100: 2,
+    700: 1
+  };
+
   return (
     <div className="w-full flex flex-col items-center">
-      {/* Conditionally render either the button or the result box */}
-      {valueMapping ? (
-        // When a result exists, show a Card that acts as the expanded result box
-        <Card className="bg-[#1C1C1C] rounded-3xl border-[#00FFFF] py-1 px-1 w-full mb-5">
-          <CardHeader className="pt-3 pb-2">
-            <div className="flex items-center justify-center">
-              <CardTitle className="text-[17px] text-[#EFEFEF] leading-tight m-0 inline-block mr-2 text-center text-[#00FFFF]">
-                Value Proposition Map
-              </CardTitle>
-              <button
-                onClick={() => setMinimizedValue(!minimizedValue)}
-                className="focus:outline-none"
-              >
-                {minimizedValue ? (
-                  <CaretDown size={24} className="text-[#00FFFF]" />
-                ) : (
-                  <CaretUp size={24} className="text-[#00FFFF]" />
-                )}
-              </button>
-            </div>
-          </CardHeader>
-          {!minimizedValue && (
-            <CardContent className="p-2 space-y-3">
-              {sections.map((section, idx) => (
-                <Card
-                  key={idx}
-                  className="border border-[#3F3F3F] bg-[#2F2F2F] rounded-xl p-3"
-                >
-                  <h2 className="text-xl font-bold text-[#EFEFEF] p-0 m-0">
-                    {section.heading}
-                  </h2>
-                  <ReactMarkdown
-                    components={{
-                      h2: () => null,
-                      h3: ({ children }) => (
-                        <h3 className="text-l p-0 m-0 text-[#EFEFEF] font-semibold mb-1">
-                          {children}
-                        </h3>
-                      ),
-                      ul: ({ children }) => (
-                        <ul className="list-disc list-inside ml-2 text-sm text-[#EFEFEF]">
-                          {children}
-                        </ul>
-                      ),
-                      li: ({ children }) => (
-                        <li className="m-0 p-0 leading-normal">{children}</li>
-                      ),
-                      p: ({ children }) => (
-                        <p className="m-0 p-0 text-sm text-[#EFEFEF] leading-normal">
-                          {children}
-                        </p>
-                      ),
-                    }}
-                  >
-                    {section.content.join('\n')}
-                  </ReactMarkdown>
-                </Card>
-              ))}
-            </CardContent>
-          )}
-        </Card>
-      ) : (
-        // Otherwise, show the button that triggers the API call
+      <motion.div className="w-full" whileTap={{ scale: 0.95 }}>
         <Button
-          onMouseEnter={() => setHoverValuePropSparkle(true)}
-          onMouseLeave={() => setHoverValuePropSparkle(false)}
+          onMouseEnter={() => valueMapping ? setHoverViewResults(true) : setHoverValuePropSparkle(true)}
+          onMouseLeave={() => valueMapping ? setHoverViewResults(false) : setHoverValuePropSparkle(false)}
           onClick={handleIdeateValuePropMapping}
-          className="
+          className={`
             w-full
             rounded-full
             px-6
             py-2
             border
-            border-[#00FFFF]
+            ${valueMapping ? 'border-[#00FFFF]/70' : 'border-[#00FFFF]'}
             bg-[#1C1C1C]
-            text-[#00FFFF]
-            hover:bg-[#00FFFF]/30
+            ${valueMapping ? 'text-[#00FFFF]/80' : 'text-[#00FFFF]'}
+            ${valueMapping ? 'hover:bg-[#00FFFF]/20' : 'hover:bg-[#00FFFF]/30'}
             hover:border-[#00FFFF]
             transition-colors
             duration-200
@@ -178,12 +139,21 @@ export default function ValuePropositionMappingColumn({
             items-center
             justify-center
             mb-5
-          "
+          `}
         >
           {loadingValueMapping ? (
             <span className="flex items-center">
               <Spinner size={20} className="mr-2 animate-spin" />
               Loading value prop...
+            </span>
+          ) : valueMapping ? (
+            <span className="flex items-center">
+              <Eye
+                size={28}
+                weight={hoverViewResults ? 'fill' : 'bold'}
+                className="mr-2"
+              />
+              View Value Proposition Map
             </span>
           ) : (
             <span className="flex items-center">
@@ -196,7 +166,94 @@ export default function ValuePropositionMappingColumn({
             </span>
           )}
         </Button>
-      )}
+      </motion.div>
+
+      {/* Modal Dialog for Value Proposition Map */}
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent className="bg-[#1C1C1C] border-[#3F3F3F] text-[#EFEFEF] p-4 rounded-lg sm:max-w-lg md:max-w-2xl lg:max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <div className="flex items-center justify-center">
+              <DialogTitle className="text-xl font-bold text-[#EFEFEF]">
+                Value Proposition Map
+              </DialogTitle>
+            </div>
+          </DialogHeader>
+          
+          <div className="pt-2 pb-2">
+            <Masonry
+              breakpointCols={{
+                default: 3,
+                1100: 2, 
+                768: 1,
+                640: 1
+              }}
+              className="flex w-auto -ml-4"
+              columnClassName="pl-4 bg-clip-padding"
+            >
+              {sections.map((section, idx) => (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.1 }}
+                  className="mb-3 sm:mb-4"
+                >
+                  <Card className="border border-[#3F3F3F] bg-[#2F2F2F] rounded-xl p-3 sm:p-4">
+                    <div className="flex flex-col space-y-2">
+                      <h2 className="text-lg sm:text-xl font-bold text-[#EFEFEF] p-0 m-0 leading-none">
+                        {section.heading}
+                      </h2>
+                      <div className="prose prose-invert prose-xs sm:prose-sm max-w-none h-auto space-y-1">
+                        <ReactMarkdown
+                          components={{
+                            h2: () => null,
+                            h3: ({ children }) => (
+                              <h3 className="text-base sm:text-lg p-0 m-0 text-[#EFEFEF] font-semibold leading-tight mt-2 mb-1">
+                                {children}
+                              </h3>
+                            ),
+                            ul: ({ children }) => (
+                              <ul className="list-disc list-outside ml-3 sm:ml-4 text-[#EFEFEF] my-0.5 p-0">
+                                {children}
+                              </ul>
+                            ),
+                            li: ({ children }) => (
+                              <li className="m-0 py-0.5 sm:py-1 text-sm sm:text-base">{children}</li>
+                            ),
+                            p: ({ children }) => (
+                              <p className="m-0 py-0.5 sm:py-1 text-sm sm:text-base text-[#EFEFEF]">
+                                {children}
+                              </p>
+                            ),
+                          }}
+                        >
+                          {section.content.join('\n')}
+                        </ReactMarkdown>
+                      </div>
+                    </div>
+                  </Card>
+                </motion.div>
+              ))}
+            </Masonry>
+          </div>
+          
+          <div className="flex justify-center gap-2 sm:gap-4 mt-2 sm:mt-4">
+            <Button 
+              onClick={handleRegenerateValueMapping}
+              className="rounded-full px-2 sm:px-3 md:px-6 py-1 sm:py-2 border border-[#00FFFF] bg-[#1C1C1C] text-[#00FFFF] hover:bg-[#00FFFF]/30 text-xs sm:text-sm md:text-base"
+            >
+              <Sparkle size={16} className="mr-1 sm:mr-2" />
+              Regenerate
+            </Button>
+            <Button 
+              onClick={() => setModalOpen(false)}
+              className="rounded-full px-2 sm:px-3 md:px-6 py-1 sm:py-2 border border-[#3F3F3F] bg-[#1C1C1C] text-[#EFEFEF] hover:bg-[#2F2F2F] text-xs sm:text-sm md:text-base"
+            >
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

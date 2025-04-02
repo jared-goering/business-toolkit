@@ -156,3 +156,9 @@ body {
 .spin-once {
   animation: spinOnce 0.5s ease-in-out forwards;
 }
+
+/* Style for drag and drop target indication */
+.persona-card.drop-target {
+  box-shadow: 0 0 0 2px #00FFFF !important;
+  transform: scale(1.02);
+}

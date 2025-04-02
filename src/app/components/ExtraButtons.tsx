@@ -7,6 +7,7 @@ import ValuePropositionMappingColumn from './buttons/ValuePropositionMappingColu
 import CompetitorReportButton from './buttons/CompetitorReportButton';
 import GTMStrategyButton from './buttons/GTMStrategyButton';
 import NextStepsButton from './buttons/NextStepsButton';
+import { motion } from 'framer-motion';
 
 interface ExtraButtonsProps {
   pitch: string;
@@ -21,12 +22,43 @@ export default function ExtraButtons({
   problem,
   customers,
 }: ExtraButtonsProps) {
-  return (
-    <section className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-10 w-full">
-      {/* Column 1 */}
+  // Animation variants for staggered children
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.3
+      }
+    }
+  };
 
-     
-      <div className="w-full flex flex-col items-center space-y-4">
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    show: { 
+      y: 0, 
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 260,
+        damping: 20
+      }
+    }
+  };
+
+  return (
+    <motion.section 
+      className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-10 w-full"
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+    >
+      {/* Column 1 */}
+      <motion.div 
+        className="w-full flex flex-col items-center space-y-4"
+        variants={itemVariants}
+      >
         <ValuePropositionMappingColumn
           pitch={pitch}
           company={company}
@@ -34,10 +66,13 @@ export default function ExtraButtons({
           customers={customers}
         />
         <NextStepsButton />
-      </div>
+      </motion.div>
 
       {/* Column 2 */}
-      <div className="w-full flex flex-col items-center space-y-4">
+      <motion.div 
+        className="w-full flex flex-col items-center space-y-4"
+        variants={itemVariants}
+      >
         <CustomerPainPointsColumn
           pitch={pitch}
           company={company}
@@ -45,10 +80,13 @@ export default function ExtraButtons({
           customers={customers}
         />
         <GTMStrategyButton />
-      </div>
+      </motion.div>
 
- {/* Column 3 */}
-      <div className="w-full flex flex-col items-center space-y-4">
+      {/* Column 3 */}
+      <motion.div 
+        className="w-full flex flex-col items-center space-y-4"
+        variants={itemVariants}
+      >
         <TargetPersonaColumn
           pitch={pitch}
           company={company}
@@ -56,8 +94,8 @@ export default function ExtraButtons({
           customers={customers}
         />
         <CompetitorReportButton />
-      </div>
+      </motion.div>
 
-    </section>
+    </motion.section>
   );
 }

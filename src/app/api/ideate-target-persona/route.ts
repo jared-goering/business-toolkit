@@ -17,13 +17,13 @@ Based on the following details:
 - Target Customers: ${customers}
 - Pitch: ${pitch}
 
-Generate 4 distinct customer personas. For each persona, include:
+Generate 6 distinct customer personas. For each persona, include:
 - A name (fictional is fine)
 - An age range
 - Interests
 - A brief description of their pain points and motivations
 
-Return the result as a valid JSON array of 4 objects, each with the keys: "name", "ageRange", "interests", and "description".`;
+Return the result as a valid JSON array of 6 objects, each with the keys: "name", "ageRange", "interests", and "description".`;
 
     const response = await openai.chat.completions.create({
       model: 'gpt-4o', 
