@@ -14,6 +14,9 @@ interface ExtraButtonsProps {
   company: string;
   problem: string;
   customers: string;
+  valueProposition: string;
+  painPoints: string[];
+  personas: string[];
 }
 
 export default function ExtraButtons({
@@ -21,6 +24,9 @@ export default function ExtraButtons({
   company,
   problem,
   customers,
+  valueProposition,
+  painPoints,
+  personas
 }: ExtraButtonsProps) {
   // Animation variants for staggered children
   const containerVariants = {
@@ -79,7 +85,15 @@ export default function ExtraButtons({
           problem={problem}
           customers={customers}
         />
-        <GTMStrategyButton />
+        <GTMStrategyButton 
+          pitch={pitch}
+          company={company}
+          problem={problem}
+          customers={customers}
+          valueProposition={valueProposition}
+          painPoints={painPoints}
+          personas={personas}
+        />
       </motion.div>
 
       {/* Column 3 */}
@@ -93,7 +107,13 @@ export default function ExtraButtons({
           problem={problem}
           customers={customers}
         />
-        <CompetitorReportButton />
+        <CompetitorReportButton 
+          pitch={pitch}
+          company={company}
+          problem={problem}
+          customers={customers}
+          valueProposition={valueProposition}
+        />
       </motion.div>
 
     </motion.section>

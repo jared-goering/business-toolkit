@@ -144,6 +144,9 @@ export default function HomePage() {
                   company={company}
                   problem={problem}
                   customers={customers}
+                  valueProposition=""
+                  painPoints={[]}
+                  personas={[]}
                 />
               </motion.div>
             )}
