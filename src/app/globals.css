@@ -162,3 +162,31 @@ body {
   box-shadow: 0 0 0 2px #00FFFF !important;
   transform: scale(1.02);
 }
+
+/* Value Proposition Map two-column layout */
+.two-column-layout {
+  width: 100% !important;
+}
+
+/* Target react-masonry-css columns */
+.two-column-layout > div {
+  width: 50% !important;
+  max-width: none !important;
+  flex-basis: 50% !important;
+}
+
+.two-column-item {
+  width: 50% !important;
+  padding-left: 16px !important;
+}
+
+@media (max-width: 767px) {
+  .two-column-layout > div {
+    width: 100% !important;
+    flex-basis: 100% !important;
+  }
+  
+  .two-column-item {
+    width: 100% !important;
+  }
+}

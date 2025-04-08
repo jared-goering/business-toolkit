@@ -165,18 +165,17 @@ export default function StepWizard({
         />
       )}
 
-      <section className="relative flex justify-center pt-10 mb-16 w-full">
+      <section className="relative flex flex-col md:flex-row justify-center pt-5 md:pt-10 mb-10 md:mb-16 w-full">
         {/* Card 1 */}
         {currentStep >= 1 && (
           <motion.div
-            className="w-full md:w-[32%] px-2 mx-auto md:mx-0 relative"
+            className="w-full md:w-[32%] px-2 mx-auto md:mx-0 mb-4 md:mb-0 relative"
             initial={{ 
-              x: 0, 
               opacity: 0,
               scale: 0.9
             }}
             animate={{ 
-              x: currentStep === 2 ? '-33%' : 0,
+              x: 0,
               opacity: 1,
               scale: 1
             }}
@@ -192,14 +191,14 @@ export default function StepWizard({
             }}
           >
             <Card className="bg-[#1C1C1C] rounded-3xl border-[#3F3F3F] py-1 px-1">
-              <CardHeader className="pt-8 pb-1">
-                <CardTitle className="text-[17px] text-[#EFEFEF] text-center leading-tight m-0">
+              <CardHeader className="pt-6 sm:pt-8 pb-1">
+                <CardTitle className="text-[18px] sm:text-[17px] text-[#EFEFEF] text-center leading-tight m-0">
                   What is your company going to make?
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-2">
                 <Textarea
-                  className="bg-[#2F2F2F] border-[#3F3F3F] text-[#EFEFEF] placeholder:text-gray-400 h-[100px] rounded-2xl"
+                  className="bg-[#2F2F2F] border-[#3F3F3F] text-[#EFEFEF] placeholder:text-gray-400 h-[120px] sm:h-[100px] rounded-2xl"
                   placeholder="e.g. AI-powered fitness app"
                   value={company}
                   onChange={(e) => setCompany(e.target.value)}
@@ -226,14 +225,14 @@ export default function StepWizard({
         {/* Card 2 */}
         {currentStep >= 2 && (
           <motion.div
-            className="w-full md:w-[32%] px-2 mx-auto md:mx-5"
+            className="w-full md:w-[32%] px-2 mx-auto md:mx-5 mb-4 md:mb-0"
             initial={{ 
-              x: '100%', 
+              y: 20,
               opacity: 0,
               scale: 0.9
             }}
             animate={{ 
-              x: 0,
+              y: 0,
               opacity: 1,
               scale: 1
             }}
@@ -248,14 +247,14 @@ export default function StepWizard({
             }}
           >
             <Card className="bg-[#1C1C1C] rounded-3xl border-[#3F3F3F] py-1 px-1">
-              <CardHeader className="pt-8 pb-1">
-                <CardTitle className="text-[17px] text-[#EFEFEF] text-center leading-tight m-0">
+              <CardHeader className="pt-6 sm:pt-8 pb-1">
+                <CardTitle className="text-[18px] sm:text-[17px] text-[#EFEFEF] text-center leading-tight m-0">
                   What problem does it solve?
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-2">
                 <Textarea
-                  className="bg-[#2F2F2F] border-[#3F3F3F] text-[#EFEFEF] placeholder:text-gray-400 h-[100px] rounded-2xl"
+                  className="bg-[#2F2F2F] border-[#3F3F3F] text-[#EFEFEF] placeholder:text-gray-400 h-[120px] sm:h-[100px] rounded-2xl"
                   placeholder="e.g. Personalized workout plans"
                   value={problem}
                   onChange={(e) => setProblem(e.target.value)}
@@ -283,14 +282,14 @@ export default function StepWizard({
         {/* Card 3 */}
         {currentStep >= 3 && (
           <motion.div
-            className="w-full md:w-[32%] px-2 mx-auto md:mx-1"
+            className="w-full md:w-[32%] px-2 mx-auto md:mx-1 mb-4 md:mb-0"
             initial={{ 
-              x: '100%', 
+              y: 20,
               opacity: 0,
               scale: 0.9
             }}
             animate={{ 
-              x: 0,
+              y: 0,
               opacity: 1,
               scale: 1
             }}
@@ -305,14 +304,14 @@ export default function StepWizard({
             }}
           >
             <Card className="bg-[#1C1C1C] rounded-3xl border-[#3F3F3F] py-1 px-1">
-              <CardHeader className="pt-8 pb-1">
-                <CardTitle className="text-[17px] text-[#EFEFEF] text-center leading-tight m-0">
+              <CardHeader className="pt-6 sm:pt-8 pb-1">
+                <CardTitle className="text-[18px] sm:text-[17px] text-[#EFEFEF] text-center leading-tight m-0">
                   Who are your target customers?
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-2">
                 <Textarea
-                  className="bg-[#2F2F2F] border-[#3F3F3F] text-[#EFEFEF] placeholder:text-gray-400 h-[100px] rounded-2xl"
+                  className="bg-[#2F2F2F] border-[#3F3F3F] text-[#EFEFEF] placeholder:text-gray-400 h-[120px] sm:h-[100px] rounded-2xl"
                   placeholder="e.g. Health-conscious individuals"
                   value={customers}
                   onChange={(e) => setCustomers(e.target.value)}

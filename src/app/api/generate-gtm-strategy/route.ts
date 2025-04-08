@@ -30,7 +30,11 @@ Provide a comprehensive, research-backed Go-To-Market (GTM) strategy for this st
 9. Key Metrics: KPIs to track success.
 10. Timeline: Phased approach for the GTM rollout.
 
-Format your response with clear headings and bullet points for each section. Present a cohesive strategy document with all content in a single continuous section. Do not repeat the same information in a numbered list format at the end of the document.`;
+Format your response with clear headings and bullet points for each section. Present a cohesive strategy document with all content in a single continuous section.
+
+IMPORTANT: Include numerical citations like [1], [2], etc. throughout the document when referencing data, statistics, or best practices. End your report with a "## Sources Cited" section with a numbered list of references with links.
+
+Do not repeat the same information in a numbered list format at the end of the document.`;
 
     // Call Perplexity API with sonar-deep-research model
     const perplexityResponse = await fetch('https://api.perplexity.ai/chat/completions', {

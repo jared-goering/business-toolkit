@@ -108,11 +108,20 @@ export default function ValuePropositionMappingColumn({
     console.log('Parsed sections:', sections);
   }
 
-  // Breakpoint for masonry layout
+  // Dynamically set column count based on number of sections
+  const getColumnCount = () => {
+    if (!sections.length) return 3; // Default
+    if (sections.length === 1) return 1;
+    if (sections.length === 2) return 2;
+    return 3; // 3 or more sections
+  };
+
+  // Breakpoint for masonry layout - dynamically adjust based on number of sections
   const breakpointColumnsObj = {
-    default: 3,
-    1100: 2,
-    700: 1
+    default: getColumnCount(),
+    1100: Math.min(getColumnCount(), 2), 
+    768: 1,
+    640: 1
   };
 
   return (
@@ -126,7 +135,8 @@ export default function ValuePropositionMappingColumn({
             w-full
             rounded-full
             px-6
-            py-2
+            py-3
+            h-[52px]
             border
             ${valueMapping ? 'border-[#00FFFF]/70' : 'border-[#00FFFF]'}
             bg-[#1C1C1C]
@@ -138,7 +148,6 @@ export default function ValuePropositionMappingColumn({
             flex
             items-center
             justify-center
-            mb-5
           `}
         >
           {loadingValueMapping ? (
@@ -180,61 +189,107 @@ export default function ValuePropositionMappingColumn({
           </DialogHeader>
           
           <div className="pt-2 pb-2">
-            <Masonry
-              breakpointCols={{
-                default: 3,
-                1100: 2, 
-                768: 1,
-                640: 1
-              }}
-              className="flex w-auto -ml-4"
-              columnClassName="pl-4 bg-clip-padding"
-            >
-              {sections.map((section, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.1 }}
-                  className="mb-3 sm:mb-4"
-                >
-                  <Card className="border border-[#3F3F3F] bg-[#2F2F2F] rounded-xl p-3 sm:p-4">
-                    <div className="flex flex-col space-y-2">
-                      <h2 className="text-lg sm:text-xl font-bold text-[#EFEFEF] p-0 m-0 leading-none">
-                        {section.heading}
-                      </h2>
-                      <div className="prose prose-invert prose-xs sm:prose-sm max-w-none h-auto space-y-1">
-                        <ReactMarkdown
-                          components={{
-                            h2: () => null,
-                            h3: ({ children }) => (
-                              <h3 className="text-base sm:text-lg p-0 m-0 text-[#EFEFEF] font-semibold leading-tight mt-2 mb-1">
-                                {children}
-                              </h3>
-                            ),
-                            ul: ({ children }) => (
-                              <ul className="list-disc list-outside ml-3 sm:ml-4 text-[#EFEFEF] my-0.5 p-0">
-                                {children}
-                              </ul>
-                            ),
-                            li: ({ children }) => (
-                              <li className="m-0 py-0.5 sm:py-1 text-sm sm:text-base">{children}</li>
-                            ),
-                            p: ({ children }) => (
-                              <p className="m-0 py-0.5 sm:py-1 text-sm sm:text-base text-[#EFEFEF]">
-                                {children}
-                              </p>
-                            ),
-                          }}
-                        >
-                          {section.content.join('\n')}
-                        </ReactMarkdown>
+            {sections.length === 2 ? (
+              // For exactly two sections, use a simple grid
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {sections.map((section, idx) => (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.1 }}
+                    className="mb-3 sm:mb-4"
+                  >
+                    <Card className="border border-[#3F3F3F] bg-[#2F2F2F] rounded-xl p-3 sm:p-4">
+                      <div className="flex flex-col space-y-2">
+                        <h2 className="text-lg sm:text-xl font-bold text-[#EFEFEF] p-0 m-0 leading-none">
+                          {section.heading}
+                        </h2>
+                        <div className="prose prose-invert prose-xs sm:prose-sm max-w-none h-auto space-y-1">
+                          <ReactMarkdown
+                            components={{
+                              h2: () => null,
+                              h3: ({ children }) => (
+                                <h3 className="text-base sm:text-lg p-0 m-0 text-[#EFEFEF] font-semibold leading-tight mt-2 mb-1">
+                                  {children}
+                                </h3>
+                              ),
+                              ul: ({ children }) => (
+                                <ul className="list-disc list-outside ml-3 sm:ml-4 text-[#EFEFEF] my-0.5 p-0">
+                                  {children}
+                                </ul>
+                              ),
+                              li: ({ children }) => (
+                                <li className="m-0 py-0.5 sm:py-1 text-sm sm:text-base">{children}</li>
+                              ),
+                              p: ({ children }) => (
+                                <p className="m-0 py-0.5 sm:py-1 text-sm sm:text-base text-[#EFEFEF]">
+                                  {children}
+                                </p>
+                              ),
+                            }}
+                          >
+                            {section.content.join('\n')}
+                          </ReactMarkdown>
+                        </div>
                       </div>
-                    </div>
-                  </Card>
-                </motion.div>
-              ))}
-            </Masonry>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              // For 1 or 3+ sections, use Masonry layout
+              <Masonry
+                breakpointCols={breakpointColumnsObj}
+                className="flex w-auto -ml-4"
+                columnClassName="pl-4 bg-clip-padding"
+              >
+                {sections.map((section, idx) => (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.1 }}
+                    className="mb-3 sm:mb-4"
+                  >
+                    <Card className="border border-[#3F3F3F] bg-[#2F2F2F] rounded-xl p-3 sm:p-4">
+                      <div className="flex flex-col space-y-2">
+                        <h2 className="text-lg sm:text-xl font-bold text-[#EFEFEF] p-0 m-0 leading-none">
+                          {section.heading}
+                        </h2>
+                        <div className="prose prose-invert prose-xs sm:prose-sm max-w-none h-auto space-y-1">
+                          <ReactMarkdown
+                            components={{
+                              h2: () => null,
+                              h3: ({ children }) => (
+                                <h3 className="text-base sm:text-lg p-0 m-0 text-[#EFEFEF] font-semibold leading-tight mt-2 mb-1">
+                                  {children}
+                                </h3>
+                              ),
+                              ul: ({ children }) => (
+                                <ul className="list-disc list-outside ml-3 sm:ml-4 text-[#EFEFEF] my-0.5 p-0">
+                                  {children}
+                                </ul>
+                              ),
+                              li: ({ children }) => (
+                                <li className="m-0 py-0.5 sm:py-1 text-sm sm:text-base">{children}</li>
+                              ),
+                              p: ({ children }) => (
+                                <p className="m-0 py-0.5 sm:py-1 text-sm sm:text-base text-[#EFEFEF]">
+                                  {children}
+                                </p>
+                              ),
+                            }}
+                          >
+                            {section.content.join('\n')}
+                          </ReactMarkdown>
+                        </div>
+                      </div>
+                    </Card>
+                  </motion.div>
+                ))}
+              </Masonry>
+            )}
           </div>
           
           <div className="flex justify-center gap-2 sm:gap-4 mt-2 sm:mt-4">

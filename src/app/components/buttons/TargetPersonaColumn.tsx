@@ -178,7 +178,8 @@ export default function TargetPersonaColumn({
             w-full
             rounded-full
             px-6
-            py-2
+            py-3
+            h-[52px]
             border
             ${personas ? 'border-[#00FFFF]/70' : 'border-[#00FFFF]'}
             bg-[#1C1C1C]
@@ -189,7 +190,6 @@ export default function TargetPersonaColumn({
             flex
             items-center
             justify-center
-            mb-5
           `}
         >
           {loading ? (
