@@ -434,8 +434,8 @@ export default function ExtraButtons({
         };
       }
     }, [isLoading, type, forceUpdateButtonState, checkButtonStates]);
-    
-    return (
+
+  return (
       <motion.div 
         variants={itemVariants} 
         className="aspect-square w-full" 
@@ -490,11 +490,11 @@ export default function ExtraButtons({
                   {type === 'nextSteps' && 'View Steps'}
                   {type === 'gtmStrategy' && 'View Strategy'}
                   {type === 'competitorReport' && 'View Competitors'}
-                </span>
+            </span>
               </div>
-            ) : (
+          ) : (
               <div key={`default-${type}`} className="flex flex-col items-center justify-center">
-                <Sparkle
+              <Sparkle
                   size={24}
                   weight={isHovered ? 'fill' : 'bold'}
                   className="mb-1"
@@ -506,10 +506,10 @@ export default function ExtraButtons({
                   {type === 'nextSteps' && 'Next Steps'}
                   {type === 'gtmStrategy' && 'GTM Strategy'}
                   {type === 'competitorReport' && 'Competitor Report'}
-                </span>
+            </span>
               </div>
-            )}
-          </div>
+        )}
+      </div>
         </Button>
       </motion.div>
     );
@@ -613,7 +613,7 @@ export default function ExtraButtons({
                 problem={problem}
                 customers={customers}
               />
-            </div>
+        </div>
             <div ref={nextStepsContainerRef} className="w-full">
               <NextStepsButton 
                 pitch={pitch}
@@ -624,7 +624,7 @@ export default function ExtraButtons({
                 painPoints={painPoints}
                 personas={personas}
               />
-            </div>
+</div>
           </motion.div>
 
           {/* Column 2 */}
@@ -677,7 +677,7 @@ export default function ExtraButtons({
             </div>
           </motion.div>
         </div>
-      </div>
+</div>
     </motion.section>
   );
 }

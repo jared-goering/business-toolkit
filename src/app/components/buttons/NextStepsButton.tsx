@@ -159,6 +159,100 @@ const parseNextSteps = (markdown: string): NextStep[] => {
   return steps;
 };
 
+// Component for handling source links specifically
+const SourceLink = ({ text }: { text: string }) => {
+  // Enhanced regex to find URLs in various formats
+  const urlRegex = /(https?:\/\/[^\s)]+)(?:\)?|\s|$)/g;
+  const matches = Array.from(text.matchAll(urlRegex));
+  
+  if (!matches || matches.length === 0) {
+    return <>{text}</>;
+  }
+  
+  let lastIndex = 0;
+  const parts = [];
+  
+  matches.forEach((match, i) => {
+    const url = match[1];
+    const fullMatchStart = match.index!;
+    const fullMatchEnd = match.index! + match[0].length;
+    
+    // Add text before the URL
+    if (fullMatchStart > lastIndex) {
+      parts.push(text.substring(lastIndex, fullMatchStart));
+    }
+    
+    // Use the actual URL as the link text
+    parts.push(
+      <a 
+        key={i}
+        href={url} 
+        data-href={url}
+        className="text-[#64B5F6] hover:text-[#9EE7FF] underline px-1 py-0.5 rounded hover:bg-[#333] cursor-pointer break-all z-[1] inline-block relative" 
+        target="_blank" 
+        rel="noopener noreferrer"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          window.open(url, '_blank', 'noopener,noreferrer');
+          return false;
+        }}
+      >
+        {url}
+      </a>
+    );
+    
+    // Skip the closing parenthesis if the URL was wrapped in parentheses
+    lastIndex = fullMatchEnd - (text.charAt(fullMatchEnd - 1) === ')' ? 1 : 0);
+  });
+  
+  // Add any remaining text
+  if (lastIndex < text.length) {
+    parts.push(text.substring(lastIndex));
+  }
+  
+  return <>{parts}</>;
+};
+
+// Component for rendering sources section
+const SourcesSection = ({ content }: { content: string }) => {
+  const sourceLines = content.split('\n').filter(line => line.trim() && !line.startsWith('#'));
+  
+  return (
+    <div id="sources-cited" className="mt-2 space-y-2">
+      {sourceLines.map((line, i) => {
+        // Look for numbered citation patterns like [1], [2], etc.
+        const citationMatch = line.match(/^\s*\[(\d+)\]\s*(.*)$/);
+        
+        if (citationMatch) {
+          const num = citationMatch[1];
+          const citationText = citationMatch[2];
+          
+          return (
+            <div 
+              key={i}
+              id={`sources-cited-${num}`} 
+              className="flex mb-2 text-[15px]"
+            >
+              <span className="text-[#64B5F6] mr-2 min-w-[30px]">[{num}]</span>
+              <span className="text-[#EFEFEF]">
+                <SourceLink text={citationText} />
+              </span>
+            </div>
+          );
+        }
+        
+        // Fallback for other formats
+        return (
+          <div key={i} className="mb-2 text-[15px] text-[#EFEFEF]">
+            <SourceLink text={line} />
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 export default function NextStepsButton({
   pitch,
   company,
@@ -280,15 +374,101 @@ export default function NextStepsButton({
           em: ({ children }: any) => <span className="text-[#B39DDB] not-italic font-medium">{children}</span>,
           ul: ({ children }: any) => <ul className="list-disc pl-5 mb-2 space-y-1">{children}</ul>,
           ol: ({ children }: any) => <ol className="list-decimal pl-5 mb-2 space-y-1">{children}</ol>,
-          li: ({ children }: any) => <li className="mb-1">{children}</li>,
+          li: ({ node, children, ...props }: any) => {
+            // Content of list item as string for analysis
+            const content = typeof children === 'string' ? children : 
+                           (Array.isArray(children) ? children.join('') : '');
+            
+            // Special handling for list items containing URLs
+            if (content && (content.includes('http://') || content.includes('https://'))) {
+              return (
+                <li className="text-sm sm:text-base text-[#EFEFEF] my-0.5" {...props}>
+                  <SourceLink text={content} />
+                </li>
+              );
+            }
+            
+            // Default rendering for other list items
+            return <li className="text-sm sm:text-base text-[#EFEFEF] my-0.5" {...props}>{children}</li>;
+          },
           h1: ({ children }: any) => <h1 className="text-xl font-bold mb-3 text-[#64B5F6]">{children}</h1>,
-          h2: ({ children }: any) => <h2 className="text-lg font-bold mb-2 text-[#64B5F6]">{children}</h2>,
+          h2: ({ children }: any) => {
+            if (typeof children === 'string' && (children as string).includes('Sources Cited')) {
+              return (
+                <h2 id="sources-cited" className="text-lg font-bold mb-2 text-[#64B5F6]">{children}</h2>
+              );
+            }
+            return <h2 className="text-lg font-bold mb-2 text-[#64B5F6]">{children}</h2>;
+          },
           h3: ({ children }: any) => <h3 className="text-md font-bold mb-2 text-[#64B5F6]">{children}</h3>,
-          a: ({ href, children }: any) => (
-            <a href={href} target="_blank" rel="noopener noreferrer" className="text-[#64B5F6] underline">
-              {children}
-            </a>
-          ),
+          a: ({ href, children, ...props }: any) => {
+            // Check if it's a citation link (typically formatted as [1], [2], etc.)
+            const isCitation = typeof children === 'string' && /^\[\d+\]$/.test(children as string);
+            
+            if (isCitation) {
+              const citationNumber = (children as string).replace(/[\[\]]/g, '');
+              return (
+                <a
+                  href={`#sources-cited-${citationNumber}`}
+                  className="text-[#64B5F6] hover:text-[#9EE7FF] underline px-1 py-0.5 rounded hover:bg-[#333] cursor-pointer"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const element = document.getElementById(`sources-cited-${citationNumber}`);
+                    if (element) {
+                      element.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                  {...props}
+                >
+                  {children}
+                </a>
+              );
+            }
+            
+            // For regular links
+            if (href && (href.startsWith('http://') || href.startsWith('https://'))) {
+              return (
+                <a
+                  href={href}
+                  className="text-[#64B5F6] hover:text-[#9EE7FF] underline px-1 py-0.5 rounded hover:bg-[#333] cursor-pointer"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.open(href, '_blank', 'noopener,noreferrer');
+                    return false;
+                  }}
+                  {...props}
+                >
+                  {children}
+                </a>
+              );
+            }
+            
+            // Default link rendering
+            return (
+              <a
+                href={href}
+                className="text-[#64B5F6] hover:text-[#9EE7FF] underline px-1 py-0.5 rounded hover:bg-[#333] cursor-pointer"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (href?.startsWith('#')) {
+                    const elementId = href.substring(1);
+                    const element = document.getElementById(elementId);
+                    if (element) {
+                      element.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }
+                }}
+                {...props}
+              >
+                {children}
+              </a>
+            );
+          },
           blockquote: ({ children }: any) => (
             <blockquote className="border-l-4 border-[#39FF14]/50 pl-4 py-1 my-2 bg-black/20 rounded-r">
               {children}
@@ -371,11 +551,12 @@ export default function NextStepsButton({
       </motion.div>
 
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="bg-[#1C1C1C] border-[#3F3F3F] text-[#EFEFEF] p-4 rounded-lg sm:max-w-lg md:max-w-3xl lg:max-w-5xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="dialog-content bg-[#1C1C1C] border-[#3F3F3F] text-[#EFEFEF] p-4 rounded-lg sm:max-w-lg md:max-w-3xl lg:max-w-5xl max-h-[80vh] overflow-y-auto pointer-events-auto"
+          onClick={(e) => e.stopPropagation()}>
           <DialogHeader>
             <div className="flex items-center justify-center">
               <DialogTitle className="text-xl font-bold text-[#EFEFEF]">
-                Prioritized Next Steps
+                Next Steps
               </DialogTitle>
             </div>
           </DialogHeader>
@@ -456,7 +637,25 @@ export default function NextStepsButton({
                   >
                     <Card className="border border-[#3F3F3F] bg-[#2F2F2F] rounded-xl p-4 overflow-hidden">
                       <div className="text-[#EFEFEF] next-steps-content">
-                        {renderMarkdown(nextSteps)}
+                        {nextSteps.includes('Sources Cited') ? (
+                          <>
+                            {/* Split the content at Sources Cited and render differently */}
+                            {nextSteps.split(/## Sources Cited/i).map((section, idx) => (
+                              <div key={idx}>
+                                {idx === 0 ? (
+                                  renderMarkdown(section) // Regular content
+                                ) : (
+                                  <>
+                                    <h2 id="sources-cited" className="text-lg font-bold mb-2 text-[#64B5F6]">Sources Cited</h2>
+                                    <SourcesSection content={section} />
+                                  </>
+                                )}
+                              </div>
+                            ))}
+                          </>
+                        ) : (
+                          renderMarkdown(nextSteps)
+                        )}
                       </div>
                     </Card>
                   </motion.div>

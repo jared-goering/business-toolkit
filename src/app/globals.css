@@ -163,6 +163,51 @@ body {
   transform: scale(1.02);
 }
 
+/* Special pointer event handling for dialogs */
+.dialog-content,
+.dialog-content * {
+  pointer-events: auto;
+}
+
+/* Basic dialog link styles - more reliable */
+.dialog-content a {
+  color: #64B5F6;
+  text-decoration: underline;
+  cursor: pointer;
+  position: relative;
+  z-index: 10;
+  padding: 0 2px;
+}
+
+/* Source citation links */
+.dialog-content a[href^="#sources"],
+[id^="sources-cited"] a {
+  color: #64B5F6;
+  text-decoration: underline;
+  cursor: pointer;
+  background-color: rgba(57, 255, 20, 0.05);
+  padding: 0 3px;
+  border-radius: 3px;
+}
+
+/* External links */
+.dialog-content a[href^="http"],
+.dialog-content a[href^="https"] {
+  color: #64B5F6;
+  text-decoration: underline;
+  cursor: pointer;
+  background-color: rgba(57, 255, 20, 0.05);
+  padding: 0 3px;
+  border-radius: 3px;
+}
+
+/* Hover state */
+.dialog-content a:hover {
+  text-decoration: underline;
+  color: #9EE7FF;
+  background-color: rgba(57, 255, 20, 0.1);
+}
+
 /* Value Proposition Map two-column layout */
 .two-column-layout {
   width: 100% !important;
@@ -189,4 +234,30 @@ body {
   .two-column-item {
     width: 100% !important;
   }
+}
+
+/* Dialog link styles - Ensure links are always clickable */
+.dialog-content a[href] {
+  position: relative;
+  z-index: 10;
+  text-decoration: underline;
+  color: #64B5F6;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0 2px;
+}
+
+.dialog-content a[href]:hover {
+  color: #9EE7FF;
+  background-color: rgba(51, 51, 51, 0.5);
+  border-radius: 2px;
+}
+
+/* Sources section styling */
+.dialog-content [id^="sources-cited-"] {
+  scroll-margin-top: 20px;
+}
+
+.dialog-content #sources-cited {
+  scroll-margin-top: 20px;
 }

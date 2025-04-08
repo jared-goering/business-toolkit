@@ -6,6 +6,7 @@ import { Sparkle, Spinner, Eye } from 'phosphor-react';
 import { motion } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import ReactMarkdown from 'react-markdown';
+import type { Components } from 'react-markdown';
 import { Card } from '@/components/ui/card';
 
 interface GTMStrategyButtonProps {
@@ -816,569 +817,320 @@ export default function GTMStrategyButton({
     );
   };
 
-  // The custom components for ReactMarkdown
-  const markdownComponents = {
-    h1: ({ node, ...props }: any) => (
-      <h1 className="text-xl sm:text-2xl font-bold text-[#EFEFEF] mt-3 mb-1" {...props} />
-    ),
-    h3: ({ node, ...props }: any) => (
-      <h3 className="text-base sm:text-lg font-medium text-[#EFEFEF] mt-2 mb-1" {...props} />
-    ),
-    h2: ({ node, children, ...props }: any) => {
-      if (typeof children === 'string') {
-        const text = children.toString();
-        // Handle Sources Cited section
-        if (text.includes('Sources Cited')) {
+  // Custom SourcesSection component to handle the references section
+  const SourcesSection = ({ content }: { content: string }) => {
+    const lines = content.split('\n').filter(line => line.trim());
+    return (
+      <div className="mt-4">
+        {lines.map((line, index) => {
+          // Look for patterns like: [1] http://example.com
+          const urlMatch = line.match(/^\[(\d+)\]\s+(https?:\/\/\S+)(.*)$/);
+          if (urlMatch) {
+            const num = urlMatch[1];
+            const url = urlMatch[2];
+            const rest = urlMatch[3] || '';
+            return (
+              <div key={index} id={`sources-cited-${num}`} className="flex mb-2 text-[15px]">
+                <span className="text-[#64B5F6] mr-2 min-w-[30px]">[{num}]</span>
+                <a 
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#64B5F6] underline hover:text-[#9EE7FF] cursor-pointer break-all"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.open(url, '_blank', 'noopener,noreferrer');
+                  }}
+                >
+                  {url}
+                </a>
+                {rest && <span className="ml-1">{rest}</span>}
+              </div>
+            );
+          }
+          
+          // Look for patterns with more description: [1] Title (http://example.com)
+          const complexMatch = line.match(/^\[(\d+)\]\s+(.*?)\s+(https?:\/\/\S+)(.*)$/);
+          if (complexMatch) {
+            const num = complexMatch[1];
+            const prefix = complexMatch[2];
+            const url = complexMatch[3];
+            const suffix = complexMatch[4] || '';
+            return (
+              <div key={index} id={`sources-cited-${num}`} className="flex mb-2 text-[15px]">
+                <span className="text-[#64B5F6] mr-2 min-w-[30px]">[{num}]</span>
+                <span>
+                  {prefix}
+                  <a 
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#64B5F6] underline hover:text-[#9EE7FF] cursor-pointer break-all"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      window.open(url, '_blank', 'noopener,noreferrer');
+                    }}
+                  >
+                    {url}
+                  </a>
+                  {suffix}
+                </span>
+              </div>
+            );
+          }
+          
+          // Fallback for other formats
+          const numMatch = line.match(/^\[(\d+)\]/);
+          if (numMatch) {
+            const num = numMatch[1];
+            return (
+              <div key={index} id={`sources-cited-${num}`} className="flex mb-2 text-[15px]">
+                <span className="text-[#64B5F6] mr-2 min-w-[30px]">[{num}]</span>
+                <span className="text-[#EFEFEF]">{line.replace(/^\[\d+\]\s*/, '')}</span>
+              </div>
+            );
+          }
+          
+          // For other lines that don't match our patterns
           return (
-            <h2 id="sources-cited" className="text-lg sm:text-xl font-semibold text-[#64B5F6] mt-6 mb-3 pb-1 border-b border-[#3F3F3F]" {...props}>
-              {children}
-            </h2>
+            <div key={index} className="mb-2 text-[15px] text-[#EFEFEF]">
+              {line}
+            </div>
           );
-        }
-        if (/^\d+\.\s+[\*\"].*[\*\"]/.test(text)) {
-          return null;
-        }
+        })}
+      </div>
+    );
+  };
+
+  // The custom components for ReactMarkdown
+  const markdownComponents: Components = {
+    h1: ({ children }) => (
+      <h1 className="text-[24px] mt-5 mb-3 text-[#EFEFEF] font-semibold">{children}</h1>
+    ),
+    h2: ({ children }) => {
+      const id = typeof children === 'string' ? children.toLowerCase().replace(/\s+/g, '-') : undefined;
+      
+      // Special handling for Sources Cited section
+      if (typeof children === 'string' && children.includes('Sources Cited')) {
+        return (
+          <h2 id="sources-cited" className="text-[19px] mt-4 mb-2 text-[#EFEFEF] font-semibold border-b border-[#3F3F3F] pb-1">
+            {children}
+          </h2>
+        );
       }
+      
       return (
-        <h2 className="text-lg sm:text-xl font-semibold text-[#64B5F6] mt-4 mb-2 pb-1 border-b border-[#3F3F3F]" {...props}>
-          {children}
-        </h2>
+        <h2 id={id} className="text-[19px] mt-4 mb-2 text-[#EFEFEF] font-semibold border-b border-[#3F3F3F] pb-1">{children}</h2>
       );
     },
-    ul: ({ node, ...props }: any) => (
-      <ul className="list-disc list-outside ml-4 text-[#EFEFEF] my-1" {...props} />
+    h3: ({ children }) => (
+      <h3 className="text-[16px] mt-3 mb-1 text-[#EFEFEF] font-semibold">{children}</h3>
     ),
-    ol: ({ node, ...props }: any) => {
-      return <ol className="list-decimal list-outside ml-4 text-[#EFEFEF] my-1" {...props} />;
-    },
-    li: ({ node, children, ...props }: any) => {
-      // Special handling for source citations in the sources list
-      if (
-        typeof children === 'string' && 
-        props.index !== undefined && 
-        props.node?.parent?.children?.[0]?.value?.includes('Sources Cited')
-      ) {
-        // This is likely a reference item in the sources list
-        if (children.includes('http') || children.includes('www.')) {
+    p: ({ children }) => {
+      // Special handling for source citations that look like [1] https://example.com 
+      if (typeof children === 'string') {
+        const text = children.toString();
+        // This regex looks for numbered citations with URLs
+        const urlMatch = text.match(/^\[(\d+)\]\s+(https?:\/\/\S+)/);
+        
+        if (urlMatch) {
+          const num = urlMatch[1];
+          const url = urlMatch[2];
           return (
-            <li id={`sources-cited-${props.index + 1}`} className="text-sm sm:text-base text-[#EFEFEF] my-0.5" {...props}>
-              {processReferenceText(children as string)}
+            <p id={`sources-cited-${num}`} className="text-[#EFEFEF] my-2 text-[15px] leading-relaxed">
+              <span className="text-[#64B5F6]">[{num}]</span> 
+              <a 
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ml-2 text-[#64B5F6] underline hover:text-[#9EE7FF] cursor-pointer"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  window.open(url, '_blank', 'noopener,noreferrer');
+                }}
+              >
+                {url}
+              </a>
+            </p>
+          );
+        }
+        
+        // Check if it might be a source citation with more context 
+        // Like [1] Title of paper (https://example.com)
+        const contextUrlMatch = text.match(/^\[(\d+)\]\s+(.*?)\s+(https?:\/\/\S+)/);
+        if (contextUrlMatch) {
+          const num = contextUrlMatch[1];
+          const context = contextUrlMatch[2];
+          const url = contextUrlMatch[3];
+          
+          return (
+            <p id={`sources-cited-${num}`} className="text-[#EFEFEF] my-2 text-[15px] leading-relaxed">
+              <span className="text-[#64B5F6]">[{num}]</span> {context} 
+              <a 
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ml-1 text-[#64B5F6] underline hover:text-[#9EE7FF] cursor-pointer"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  window.open(url, '_blank', 'noopener,noreferrer');
+                }}
+              >
+                {url}
+              </a>
+            </p>
+          );
+        }
+      }
+      
+      return <p className="text-[#EFEFEF] my-2 text-[15px] leading-relaxed">{children}</p>;
+    },
+    ul: ({ children }) => {
+      return <ul className="list-disc pl-6 my-2 text-[#EFEFEF]">{children}</ul>;
+    },
+    ol: ({ children }) => {
+      return <ol className="list-decimal pl-6 my-2 text-[#EFEFEF]">{children}</ol>;
+    },
+    li: ({ children }) => {
+      // Special handling for source citations in list items
+      if (typeof children === 'string') {
+        const text = children.toString();
+        const urlMatch = text.match(/^\[(\d+)\]\s+(https?:\/\/\S+)/);
+        
+        if (urlMatch) {
+          const num = urlMatch[1];
+          const url = urlMatch[2];
+          return (
+            <li id={`sources-cited-${num}`} className="my-1 text-[#EFEFEF]">
+              <span className="text-[#64B5F6]">[{num}]</span> 
+              <a 
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ml-2 text-[#64B5F6] underline hover:text-[#9EE7FF] cursor-pointer"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.open(url, '_blank', 'noopener,noreferrer');
+                }}
+              >
+                {url}
+              </a>
             </li>
           );
         }
       }
-      return <li className="text-sm sm:text-base text-[#EFEFEF] my-0.5" {...props}>{children}</li>;
-    },
-    p: ({ node, children, ...props }: any) => {
-      // Check if this paragraph contains what looks like a table structure
-      if (typeof children === 'string') {
-        const contentString = children.toString();
-        
-        // Check for consistent pipe usage indicating a table structure
-        const allLines = contentString.split('\n').map(line => line.trim()).filter(line => line.length > 0);
-        const pipeLines = allLines.filter(line => line.includes('|'));
-        
-        // If a significant portion of lines have pipes, treat it as a table
-        // Also check for typical table patterns like consistent pipe structure
-        const isPipeTable = 
-          pipeLines.length >= 2 && // At least 2 lines with pipes
-          (pipeLines.length / allLines.length > 0.5 || // More than half the lines have pipes
-           pipeLines.length >= 4); // Or at least 4 lines with pipes (header + separator + 2 data rows)
-        
-        if (isPipeTable) {
-          // Focus on the lines with pipe characters
-          const tableLines = pipeLines;
-          
-          // Check if this is a Key Metrics table
-          const isKeyMetricsTable = 
-            contentString.toLowerCase().includes('key metrics') || 
-            (tableLines.some(line => 
-              line.toLowerCase().includes('metric') && 
-              line.toLowerCase().includes('target')));
-          
-          // Process into table structure
-          const tableRows = tableLines.map(line => line.split('|'));
-          
-          // Identify separator rows (lines with mostly dashes)
-          const separatorIndices = tableRows.map((row, index) => {
-            const isDashRow = row.some((cell, i) => {
-              const trimmed = cell.trim();
-              return /^-+$/.test(trimmed) || /^[=-]+$/.test(trimmed);
-            });
-            return isDashRow ? index : -1;
-          }).filter(index => index !== -1);
-          
-          // Find header row (usually before first separator)
-          const headerRowIndex = separatorIndices.length > 0 ? 
-                               Math.min(...separatorIndices) - 1 : 
-                               0;
-                               
-          // Find column indices for specific header types
-          let metricColIndex = -1;
-          let targetColIndex = -1;
-          let sourceColIndex = -1;
-          
-          // Check each header cell
-          if (headerRowIndex >= 0 && tableRows[headerRowIndex]) {
-            tableRows[headerRowIndex].forEach((cell, idx) => {
-              const trimmed = cell.trim().toLowerCase();
-              if (trimmed === 'metric' || trimmed === 'kpi') metricColIndex = idx;
-              if (trimmed === 'target') targetColIndex = idx;
-              if (trimmed.includes('source')) sourceColIndex = idx;
-            });
-          }
-          
-          // Default column positions if not found in headers
-          if (metricColIndex === -1) metricColIndex = 1;  // First column after leading pipe
-          if (targetColIndex === -1) targetColIndex = 2;  // Second column is usually target
-          if (sourceColIndex === -1) sourceColIndex = 3;  // Third column is usually source
-          
-          // Get the table title for special styling
-          const tableTitle = isKeyMetricsTable ? "Key Metrics" : "";
-          
-          return (
-            <div className="overflow-x-auto my-4">
-              {isKeyMetricsTable && (
-                <h3 className="text-[#64B5F6] text-xl font-medium mb-2">{tableTitle}</h3>
-              )}
-              <div className="rounded-md border border-[#4F4F4F] bg-[#262626] overflow-hidden shadow-md">
-                <table className="min-w-full border-collapse text-sm">
-                  {/* Header row */}
-                  <thead className="bg-[#2A2A2A]">
-                    <tr>
-                      {tableRows[headerRowIndex].map((cell, i) => {
-                        const trimmedCell = cell.trim();
-                        // Skip empty cells (from empty pipes)
-                        if (trimmedCell === '') return null;
-                        
-                        return (
-                          <th 
-                            key={i}
-                            className="px-4 py-3 text-[#EFEFEF] font-medium text-left border-b border-[#3F3F3F]"
-                          >
-                            {trimmedCell}
-                          </th>
-                        );
-                      }).filter(Boolean)}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {tableRows.map((row, rowIndex) => {
-                      // Skip header row (already rendered) and separator rows
-                      if (rowIndex === headerRowIndex || separatorIndices.includes(rowIndex)) {
-                        return null;
-                      }
-                      
-                      return (
-                        <tr 
-                          key={rowIndex}
-                          className={`border-b border-[#3F3F3F] last:border-b-0 ${
-                            rowIndex % 2 === 0 ? 'bg-[#2D2D2D]' : 'bg-[#262626]'
-                          }`}
-                        >
-                          {row.map((cell, cellIndex) => {
-                            const trimmedCell = cell.trim();
-                            // Skip empty cells (from empty pipes)
-                            if (trimmedCell === '') return null;
-                            
-                            // Check for citations [9], [12], etc.
-                            const hasCitation = trimmedCell.match(/\[\d+\]$/);
-                            
-                            // Determine cell type based on column position
-                            const isMetricCell = cellIndex === metricColIndex;
-                            const isTargetCell = cellIndex === targetColIndex;
-                            const isSourceCell = cellIndex === sourceColIndex;
-                            
-                            // Apply specific styling for Key Metrics tables
-                            const cellClass = isKeyMetricsTable ? 
-                              `
-                                px-4 py-3 border-r border-[#3F3F3F] last:border-r-0
-                                ${isMetricCell ? 'font-medium text-[#EFEFEF]' : ''}
-                                ${isTargetCell ? 'text-[#64B5F6] font-medium' : ''}
-                                ${isSourceCell ? 'text-gray-400' : ''}
-                              ` : 
-                              `
-                                px-4 py-3 border-r border-[#3F3F3F] last:border-r-0
-                                ${cellIndex === 1 ? 'font-medium text-[#EFEFEF]' : ''}
-                              `;
-                            
-                            return (
-                              <td 
-                                key={cellIndex}
-                                className={cellClass}
-                              >
-                                {hasCitation ? (
-                                  <>
-                                    {trimmedCell.replace(/\[\d+\]$/, '')}
-                                    <span className="text-[#64B5F6]">{hasCitation[0]}</span>
-                                  </>
-                                ) : (
-                                  trimmedCell
-                                )}
-                              </td>
-                            );
-                          }).filter(Boolean)}
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          );
-        }
-        
-        // If the simple pipe detection didn't work, try the specialized handlers
-        const pricingTable = handlePricingStrategyTable(contentString);
-        if (pricingTable) return pricingTable;
-        
-        const genericTable = handleGenericTableFormat(contentString);
-        if (genericTable) return genericTable;
-        
-        const keyMetricsTable = handleKeyMetricsFormat(contentString);
-        if (keyMetricsTable) return keyMetricsTable;
-        
-        if (isKeyMetricsSection(contentString)) {
-          const renderedTable = renderRawTableWithPipes(contentString);
-          if (renderedTable) return renderedTable;
-        }
-        
-        // Special check for Key Metrics table format
-        const isKeyMetricsTable = 
-          (contentString.includes('Key Metrics') || contentString.toLowerCase().includes('key metrics')) && 
-          contentString.includes('|') && 
-          (contentString.includes('Metric') || contentString.includes('KPI') || contentString.includes('metric')) && 
-          (contentString.match(/\|/g) || []).length >= 3;
-          
-        // General check for table structures
-        const hasTableFormat = contentString.includes('|') && 
-                             (contentString.includes('Matrix') || 
-                              contentString.includes('Feature') || 
-                              contentString.includes('Metric') || 
-                              contentString.includes('Target') || 
-                              contentString.includes('KPI') || 
-                              contentString.includes('Key Metrics') ||
-                              /\|\s*[✓✗Xx]\s*\|/.test(contentString) ||
-                              contentString.includes('|---') || 
-                              // Count the number of pipe characters to determine if it's likely a table
-                              (contentString.match(/\|/g) || []).length >= 4);
-                              
-        if (isKeyMetricsTable || hasTableFormat) {
-          // Handle tables that are just text with pipe separators
-          const parsedTable = parseTableFromText(contentString);
-          
-          if (parsedTable && parsedTable.tableRows.length > 0) {
-            const { tableRows, headerRowIndex, separatorIndices, hasHeader } = parsedTable;
-            
-            // Detect if this is likely a metrics table based on header content
-            const isMetricsTable = isKeyMetricsTable || 
-              (hasHeader && tableRows[headerRowIndex].some(cell => 
-                cell.toLowerCase().includes('metric') || 
-                cell.toLowerCase().includes('kpi') || 
-                cell.toLowerCase().includes('target')));
-            
-            return (
-              <div className="overflow-x-auto my-4">
-                <div className="rounded-md border border-[#4F4F4F] bg-[#262626] overflow-hidden shadow-md">
-                  <table className="min-w-full border-collapse table-auto">
-                    {hasHeader && (
-                      <thead className="bg-[#2A2A2A] border-b border-[#3F3F3F]">
-                        <tr>
-                          {tableRows[headerRowIndex].map((cell: string, j: number) => (
-                            <th 
-                              key={j} 
-                              className="px-4 py-3 text-sm font-semibold text-[#EFEFEF] text-left border-r border-[#3F3F3F] last:border-r-0"
-                            >
-                              {cell}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                    )}
-                    <tbody>
-                      {tableRows.map((row: string[], i: number) => {
-                        // Skip header row if already rendered in thead
-                        if (i === headerRowIndex && hasHeader) return null;
-                        
-                        // Skip separator rows
-                        if (separatorIndices.includes(i)) return null;
-                        
-                        return (
-                          <tr 
-                            key={i} 
-                            className={`
-                              border-b border-[#3F3F3F] last:border-b-0 
-                              ${i % 2 === 0 ? 'bg-[#2D2D2D]' : 'bg-[#262626]'}
-                            `}
-                          >
-                            {row.map((cell: string, j: number) => {
-                              // Apply special styling for checkmarks and crosses
-                              const isCheckmark = 
-                                cell === '✓' || 
-                                cell === '✔' || 
-                                cell.toLowerCase() === 'yes' || 
-                                cell === 'true' ||
-                                (cell.length <= 3 && /v/i.test(cell));
-                              
-                              const isCross = 
-                                cell === '✗' || 
-                                cell === '✘' || 
-                                cell === 'X' || 
-                                cell === 'x' || 
-                                cell.toLowerCase() === 'no' || 
-                                cell === 'false';
-                              
-                              // Special styling for metrics tables
-                              const isMetricCell = j === 0 && isMetricsTable;
-                              const isValueCell = j === 1 && isMetricsTable;
-                              const isSourceCell = j === 2 && isMetricsTable;
-                              
-                              return (
-                                <td 
-                                  key={j} 
-                                  className={`
-                                    px-4 py-3 text-sm border-r border-[#3F3F3F] last:border-r-0
-                                    ${isMetricCell ? 'font-medium text-[#EFEFEF] bg-[#2A2A2A]' : ''}
-                                    ${isValueCell ? 'text-[#64B5F6] font-medium' : ''} 
-                                    ${(isCheckmark || isCross) ? 'text-center' : ''}
-                                    ${!isMetricCell && j !== 0 ? 'text-[#EFEFEF]' : ''}
-                                  `}
-                                >
-                                  {isCheckmark ? (
-                                    <span className="inline-flex items-center justify-center text-emerald-400 font-bold text-lg">✓</span>
-                                  ) : isCross ? (
-                                    <span className="inline-flex items-center justify-center text-rose-500 font-bold text-lg">✗</span>
-                                  ) : (
-                                    cell
-                                  )}
-                                </td>
-                              );
-                            })}
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            );
-          }
-        }
-      }
       
-      // Process in-text citations like [1], [2], etc.
-      if (typeof children === 'string' && children.toString().includes('[') && /\[\d+\]/.test(children.toString())) {
-        // Extract citation numbers
-        const citations = Array.from(children.toString().matchAll(/\[(\d+)\](?!\()/g)).map(m => m[1]);
-        
-        if (citations.length === 0) {
-          return <p className="text-sm sm:text-base text-[#EFEFEF] my-1" {...props}>{children}</p>;
-        }
-        
-        // Split the text by citations and reconstruct with clickable links
-        const parts = children.toString().split(/\[(\d+)\](?!\()/);
+      return <li className="my-1 text-[#EFEFEF]">{children}</li>;
+    },
+    a: ({ href, children }) => {
+      // Check if this is a citation link (like [1], [2], etc.)
+      const isCitation = 
+        typeof children === 'string' && 
+        /^\[\d+\]$/.test(children as string);
+      
+      if (isCitation) {
+        const citationNumber = (children as string).replace(/[\[\]]/g, '');
         
         return (
-          <p className="text-sm sm:text-base text-[#EFEFEF] my-1" {...props}>
-            {parts.map((part, i) => {
-              // Even indices are text, odd indices are citation numbers
-              if (i % 2 === 0) return part;
-              
-              const num = part;
-              return (
-                <a 
-                  key={i}
-                  href={`#sources-cited-${num}`}
-                  className="text-[#64B5F6] hover:underline cursor-pointer inline-block mx-1"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    // Scroll to the references section
-                    const element = document.getElementById(`sources-cited-${num}`);
-                    if (element) element.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                >
-                  [{num}]
-                </a>
-              );
-            })}
-          </p>
-        );
-      }
-      
-      // Handle normal paragraphs
-      return <p className="text-sm sm:text-base text-[#EFEFEF] my-1" {...props}>{children}</p>;
-    },
-    table: ({ node, ...props }: any) => (
-      <div className="overflow-x-auto my-4">
-        <table className="min-w-full border-collapse border border-[#3F3F3F]" {...props} />
-      </div>
-    ),
-    thead: ({ node, ...props }: any) => <thead className="bg-[#2A2A2A]" {...props} />,
-    tbody: ({ node, ...props }: any) => <tbody {...props} />,
-    tr: ({ node, ...props }: any) => <tr className="border-b border-[#3F3F3F]" {...props} />,
-    th: ({ node, ...props }: any) => (
-      <th className="px-4 py-2 text-left text-sm font-semibold text-[#EFEFEF] border-r border-[#3F3F3F] last:border-r-0" {...props} />
-    ),
-    td: ({ node, ...props }: any) => (
-      <td className="px-4 py-2 text-sm text-[#EFEFEF] border-r border-[#3F3F3F] last:border-r-0" {...props} />
-    ),
-    code: ({ node, inline, className, children, ...props }: any) => {
-      // Special case for competitive matrix tables
-      if (!inline && typeof children === 'string') {
-        // Check if this looks like a competitive matrix (contains | and either ✓, ✗, X, or checkmarks)
-        const isCompetitiveMatrix = 
-          children.includes('|') && 
-          (children.includes('Competitive Matrix') || 
-           children.includes('Matrix:') ||
-           children.includes('Feature') || 
-           /[\✓\✗Xx\-]/.test(children));
-        
-        if (isCompetitiveMatrix) {
-          const lines = children.split('\n').filter((line: string) => line.trim());
-          if (lines.length > 0 && lines[0].includes('|')) {
-            // Determine if this is a header row by checking for multiple dashes
-            const hasHeader = lines.some(line => line.includes('--'));
-            const headerIndex = hasHeader ? lines.findIndex(line => line.includes('--')) - 1 : 0;
-            
-            // Extract header row
-            const headerRow = headerIndex >= 0 ? lines[headerIndex] : null;
-            
-            // Filter out separator lines (those with dashes)
-            const contentLines = lines.filter(line => !line.includes('---'));
-            
-            return (
-              <div className="overflow-x-auto my-4">
-                <div className="rounded-md border border-[#4F4F4F] bg-[#262626] overflow-hidden">
-                  <table className="min-w-full border-collapse table-fixed">
-                    {headerRow && (
-                      <thead className="bg-[#2A2A2A]">
-                        <tr>
-                          {headerRow.split('|')
-                            .filter((cell: string) => cell.trim())
-                            .map((cell: string, j: number) => (
-                              <th key={j} className="px-4 py-3 text-left text-sm font-semibold text-[#EFEFEF] border-b border-[#3F3F3F] border-r border-[#3F3F3F] last:border-r-0">
-                                {cell.trim()}
-                              </th>
-                            ))}
-                        </tr>
-                      </thead>
-                    )}
-                    <tbody>
-                      {contentLines.map((line: string, i: number) => {
-                        if (headerRow && i === 0) return null; // Skip header row as we already processed it
-                        
-                        return (
-                          <tr key={i} className={`border-b border-[#3F3F3F] last:border-b-0 ${i % 2 === 0 ? 'bg-[#2A2A2A]' : 'bg-[#262626]'}`}>
-                            {line.split('|')
-                              .filter((cell: string) => cell.trim())
-                              .map((cell: string, j: number) => {
-                                // Apply special styling for checkmarks and crosses
-                                const cellContent = cell.trim();
-                                const isCheckmark = cellContent === '✓' || cellContent === '✔' || 
-                                                   cellContent.toLowerCase() === 'yes' || 
-                                                   cellContent === 'true' || 
-                                                   (cellContent.length <= 3 && /v/i.test(cellContent));
-                                const isCross = cellContent === '✗' || cellContent === '✘' || 
-                                                cellContent === 'X' || cellContent === 'x' || 
-                                                cellContent.toLowerCase() === 'no' || 
-                                                cellContent === 'false';
-                                
-                                return (
-                                  <td 
-                                    key={j} 
-                                    className={`px-4 py-3 text-sm border-r border-[#3F3F3F] last:border-r-0 ${
-                                      j === 0 ? 'font-medium text-[#EFEFEF] bg-[#2D2D2D]' : 'text-[#EFEFEF] text-center'
-                                    }`}
-                                  >
-                                    {isCheckmark ? (
-                                      <span className="inline-flex items-center justify-center text-emerald-400 font-bold text-lg">✓</span>
-                                    ) : isCross ? (
-                                      <span className="inline-flex items-center justify-center text-rose-500 font-bold text-lg">✗</span>
-                                    ) : (
-                                      cellContent
-                                    )}
-                                  </td>
-                                );
-                              })}
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            );
-          }
-        }
-        
-        // Standard table handling for non-competitive matrices
-        else if (children.includes('|')) {
-          const lines = children.split('\n').filter((line: string) => line.trim());
-          if (lines.length > 0 && lines[0].includes('|')) {
-            return (
-              <div className="overflow-x-auto my-4">
-                <table className="min-w-full border-collapse border border-[#3F3F3F]">
-                  <tbody>
-                    {lines.map((line: string, i: number) => (
-                      <tr key={i} className="border-b border-[#3F3F3F]">
-                        {line.split('|')
-                          .filter((cell: string) => cell.trim())
-                          .map((cell: string, j: number) => (
-                            <td key={j} className="px-4 py-2 text-sm text-[#EFEFEF] border-r border-[#3F3F3F] last:border-r-0">
-                              {cell.trim()}
-                            </td>
-                          ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            );
-          }
-        }
-      }
-      return <code className={className} {...props}>{children}</code>;
-    },
-    a: ({ node, href, children, ...props }: any) => {
-      // If the link text is a number in brackets like [1], [2], etc.
-      if (typeof children === 'string' && /^\[\d+\]$/.test(children.toString())) {
-        const sourceNumber = children.toString().match(/\[(\d+)\]/)?.[1];
-        return (
-          <a 
-            href={`#sources-cited-${sourceNumber}`}
-            className="text-[#64B5F6] hover:underline cursor-pointer inline-block mx-1"
+          <a
+            id={`citation-link-${citationNumber}`}
+            href={`#sources-cited-${citationNumber}`}
+            className="text-[#64B5F6] hover:underline cursor-pointer"
             onClick={(e) => {
               e.preventDefault();
-              // Scroll to the references section
-              const element = document.getElementById(`sources-cited-${sourceNumber}`);
-              if (element) element.scrollIntoView({ behavior: 'smooth' });
+              const element = document.getElementById(`sources-cited-${citationNumber}`);
+              if (element) {
+                element.scrollIntoView({ behavior: 'smooth' });
+              }
             }}
-            {...props}
           >
             {children}
           </a>
         );
       }
-      // Handle links in the sources section
-      if (href && href.startsWith('http')) {
+      
+      // For regular links (typically http/https URLs)
+      if (href?.startsWith('http')) {
         return (
-          <a 
-            href={href} 
-            className="text-[#64B5F6] hover:underline" 
-            target="_blank" 
+          <a
+            href={href}
+            target="_blank"
             rel="noopener noreferrer"
-            {...props}
+            className="text-[#64B5F6] underline hover:text-[#9EE7FF] cursor-pointer"
+            onClick={(e) => {
+              e.preventDefault();
+              window.open(href, '_blank', 'noopener,noreferrer');
+            }}
           >
             {children}
           </a>
         );
       }
+      
+      // Default case
       return (
-        <a href={href} className="text-[#64B5F6] hover:underline" target="_blank" rel="noopener noreferrer" {...props}>
+        <a
+          href={href}
+          className="text-[#64B5F6] hover:underline cursor-pointer"
+        >
           {children}
         </a>
       );
-    },
+    }
+  };
+
+  // Effect to ensure links in the modal are clickable
+  useEffect(() => {
+    if (modalOpen && gtmStrategy) {
+      // Wait for DOM to be updated with dialog content
+      setTimeout(() => {
+        // Get all links in the dialog
+        const links = document.querySelectorAll('.dialog-content a[href]');
+        console.log(`Found ${links.length} links in GTM Strategy dialog`);
+        
+        // Add direct click handler to each link
+        links.forEach(link => {
+          // Remove any existing handlers
+          link.removeEventListener('click', handleLinkClick);
+          
+          // Add new direct handler
+          link.addEventListener('click', handleLinkClick);
+        });
+      }, 300);
+    }
+    
+    return () => {
+      // Clean up handlers when component unmounts
+      const links = document.querySelectorAll('.dialog-content a[href]');
+      links.forEach(link => {
+        link.removeEventListener('click', handleLinkClick);
+      });
+    };
+  }, [modalOpen, gtmStrategy]);
+
+  // Direct link click handler
+  const handleLinkClick = (e: Event) => {
+    e.stopPropagation();
+    e.preventDefault();
+    
+    const link = e.currentTarget as HTMLAnchorElement;
+    const href = link.getAttribute('href');
+    
+    if (href) {
+      if (href.startsWith('#')) {
+        // Internal link - scroll to element
+        const targetId = href.substring(1);
+        const targetElement = document.getElementById(targetId);
+        if (targetElement) {
+          targetElement.scrollIntoView({ behavior: 'smooth' });
+        }
+      } else if (href.startsWith('http://') || href.startsWith('https://')) {
+        // External link - open in new tab
+        window.open(href, '_blank', 'noopener,noreferrer');
+      }
+    }
   };
 
   return (
@@ -1446,7 +1198,7 @@ export default function GTMStrategyButton({
       </motion.div>
       
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="bg-[#1C1C1C] border-[#3F3F3F] text-[#EFEFEF] p-4 rounded-lg sm:max-w-lg md:max-w-3xl lg:max-w-5xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="dialog-content bg-[#1C1C1C] border-[#3F3F3F] text-[#EFEFEF] p-4 rounded-lg sm:max-w-lg md:max-w-3xl lg:max-w-5xl max-h-[80vh] overflow-y-auto pointer-events-auto">
           <DialogHeader>
             <div className="flex items-center justify-center">
               <DialogTitle className="text-xl font-bold text-[#EFEFEF]">
@@ -1455,20 +1207,24 @@ export default function GTMStrategyButton({
             </div>
           </DialogHeader>
           
-          <div className="pt-2 pb-2">
+          <div className="pt-2 pb-2 pointer-events-auto" onClick={(e) => e.stopPropagation()}>
             {gtmStrategy ? (
-              <div className="space-y-3">
+              <div className="space-y-3 pointer-events-auto">
                 {sections.map((section, index) => (
-                  <Card key={index} className="border border-[#3F3F3F] bg-[#2F2F2F] rounded-xl p-2 sm:p-3">
+                  <Card key={index} className="border border-[#3F3F3F] bg-[#2F2F2F] rounded-xl p-2 sm:p-3 pointer-events-auto">
                     <div className="flex items-center mb-0">
                       <h2 className="text-lg sm:text-xl font-semibold text-[#64B5F6]">
                         {section.heading}
                       </h2>
                     </div>
-                    <div className="prose prose-invert prose-sm max-w-none">
-                      <ReactMarkdown components={markdownComponents}>
-                        {section.content}
-                      </ReactMarkdown>
+                    <div className="prose prose-invert prose-sm max-w-none pointer-events-auto">
+                      {section.heading.includes('Sources Cited') ? (
+                        <SourcesSection content={section.content} />
+                      ) : (
+                        <ReactMarkdown components={markdownComponents}>
+                          {section.content}
+                        </ReactMarkdown>
+                      )}
                     </div>
                   </Card>
                 ))}

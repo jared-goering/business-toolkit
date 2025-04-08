@@ -82,9 +82,10 @@ const CitationLink = ({ num, children }: { num: string, children?: React.ReactNo
   return (
     <a 
       href={`#sources-cited-${num}`}
-      className="text-[#64B5F6] hover:underline cursor-pointer inline-block mx-0.5"
+      className="text-[#64B5F6] hover:underline cursor-pointer inline-block mx-0.5 pointer-events-auto"
       onClick={(e) => {
         e.preventDefault();
+        e.stopPropagation();
         const element = document.getElementById(`sources-cited-${num}`);
         if (element) {
           element.scrollIntoView({ behavior: 'smooth' });
@@ -96,29 +97,11 @@ const CitationLink = ({ num, children }: { num: string, children?: React.ReactNo
   );
 };
 
-// Component for rendering sources section
-const SourcesSection = ({ content }: { content: string }) => {
-  const sourceLines = content.split('\n').filter(line => line.trim() && !line.startsWith('#'));
-  
-  return (
-    <ol id="sources-cited" className="list-decimal list-outside ml-4 text-[#AFAFAF] my-2 space-y-1.5">
-      {sourceLines.map((line, i) => (
-        <li
-          key={i}
-          id={`sources-cited-${i + 1}`}
-          className="text-sm sm:text-base text-[#AFAFAF] my-1"
-        >
-          <SourceLink text={line} />
-        </li>
-      ))}
-    </ol>
-  );
-};
-
 // Component for processing and displaying URLs in source citations
 const SourceLink = ({ text }: { text: string }) => {
-  // Find URLs in the format (http://...) or plain URLs
-  const urlRegex = /(https?:\/\/[^\s)]+)(?:\)|\s|$)/g;
+  // Enhanced regex to find URLs in various formats, including URLs at the end of lines
+  // and URLs followed by parentheses or brackets
+  const urlRegex = /(https?:\/\/[^\s)]+)(?:\)?|\s|$)/g;
   const matches = Array.from(text.matchAll(urlRegex));
   
   if (!matches || matches.length === 0) {
@@ -138,20 +121,28 @@ const SourceLink = ({ text }: { text: string }) => {
       parts.push(text.substring(lastIndex, fullMatchStart));
     }
     
-    // Add the URL as a clickable link
+    // Check if URL is wrapped in parentheses
     const isWrappedInParentheses =
       text.charAt(fullMatchStart - 1) === '(' &&
       text.charAt(fullMatchEnd - 1) === ')';
     
-    const linkText = isWrappedInParentheses ? '[Link]' : url;
+    // Use the actual URL as the link text
+    const linkText = url;
     
     parts.push(
       <a 
         key={i}
         href={url} 
-        className="text-[#64B5F6] hover:underline" 
+        data-href={url}
+        className="text-[#64B5F6] hover:text-[#9EE7FF] underline px-1 py-0.5 rounded hover:bg-[#333] cursor-pointer break-all z-[1] inline-block relative" 
         target="_blank" 
         rel="noopener noreferrer"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          window.open(url, '_blank', 'noopener,noreferrer');
+          return false;
+        }}
       >
         {linkText}
       </a>
@@ -167,6 +158,45 @@ const SourceLink = ({ text }: { text: string }) => {
   }
   
   return <>{parts}</>;
+};
+
+// Component for rendering sources section
+const SourcesSection = ({ content }: { content: string }) => {
+  const sourceLines = content.split('\n').filter(line => line.trim() && !line.startsWith('#'));
+  
+  return (
+    <div id="sources-cited" className="mt-2 space-y-2">
+      {sourceLines.map((line, i) => {
+        // Look for numbered citation patterns like [1], [2], etc.
+        const citationMatch = line.match(/^\s*\[(\d+)\]\s*(.*)$/);
+        
+        if (citationMatch) {
+          const num = citationMatch[1];
+          const citationText = citationMatch[2];
+          
+          return (
+            <div 
+              key={i}
+              id={`sources-cited-${num}`} 
+              className="flex mb-2 text-[15px]"
+            >
+              <span className="text-[#64B5F6] mr-2 min-w-[30px]">[{num}]</span>
+              <span className="text-[#EFEFEF]">
+                <SourceLink text={citationText} />
+              </span>
+            </div>
+          );
+        }
+        
+        // Fallback for other formats
+        return (
+          <div key={i} className="mb-2 text-[15px] text-[#EFEFEF]">
+            <SourceLink text={line} />
+          </div>
+        );
+      })}
+    </div>
+  );
 };
 
 // Component for processing paragraph text with citations
@@ -239,40 +269,53 @@ const RegularSection = ({ content, company }: { content: string, company: string
       <ol className="list-decimal list-outside ml-4 text-[#EFEFEF] my-2">{children}</ol>
     ),
     
-    li: ({ children }: any) => {
-      if (!children) return null;
-      
-      if (typeof children !== 'string') {
-        return <li className="text-sm sm:text-base text-[#EFEFEF] my-1">{children}</li>;
-      }
-      
-      const text = children.toString();
-      
-      // Process list items with citations
-      if (text.includes('[') && /\[\d+\]/.test(text)) {
-        const parts = text.split(/\[(\d+)\](?!\()/);
+    li: ({ node, children, ...props }: any) => {
+      // Special handling for source citations in the sources list
+      if (
+        props.node?.parent?.children?.[0]?.value?.includes('Sources Cited')
+      ) {
+        // This is likely a reference item in the sources list
+        const content = typeof children === 'string' ? children : 
+                       (Array.isArray(children) ? children.join('') : '');
         
+        if (content && (content.includes('http') || content.includes('www.'))) {
+          // Extract URL from the content
+          const urlRegex = /(https?:\/\/[^\s]+)/g;
+          const matches = content.match(urlRegex);
+          
+          if (matches && matches.length > 0) {
+            const url = matches[0];
+            // Split content into parts before and after URL
+            const parts = content.split(url);
+            
+            return (
+              <li id={`sources-cited-${props.index + 1}`} className="text-sm sm:text-base text-[#EFEFEF] my-0.5" {...props}>
+                {parts[0]}
+                <a
+                  href={url}
+                  className="text-[#64B5F6] hover:underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {url}
+                </a>
+                {parts[1] || ''}
+              </li>
+            );
+          }
+        }
+        
+        // For source items without URLs or where URL extraction failed
         return (
-          <li className="text-sm sm:text-base text-[#EFEFEF] my-1">
-            {parts.map((part, i) => {
-              if (i % 2 === 0) return part;
-              return <CitationLink key={i} num={part} />;
-            })}
+          <li id={`sources-cited-${props.index + 1}`} className="text-sm sm:text-base text-[#EFEFEF] my-0.5" {...props}>
+            {children}
           </li>
         );
       }
       
-      // Improved detection for company/competitor names
-      // No more hardcoded checking for specific industries
-      // Only highlight if it's likely to be a company name (with typical company indicators)
-      if (
-        /\b(?:Inc|LLC|Ltd|GmbH|Corp|SA|SL|Company|Technologies)\b/i.test(text) || 
-        text.includes(company)
-      ) {
-        return <li className="text-sm sm:text-base text-[#81C784] font-medium my-1">{text}</li>;
-      }
-      
-      return <li className="text-sm sm:text-base text-[#EFEFEF] my-1">{text}</li>;
+      // Default rendering for non-source list items
+      return <li className="text-sm sm:text-base text-[#EFEFEF] my-0.5" {...props}>{children}</li>;
     },
     
     strong: ({ children }: any) => {
@@ -390,38 +433,71 @@ const RegularSection = ({ content, company }: { content: string, company: string
       return <code className={className}>{children}</code>;
     },
     
-    a: ({ href, children }: any) => {
-      if (!children) return null;
+    a: ({ href, children, ...props }: any) => {
+      // Check if it's a citation link (typically formatted as [1], [2], etc.)
+      const isCitation = typeof children === 'string' && /^\[\d+\]$/.test(children as string);
       
-      // If the link text is a number in brackets like [1], [2], etc.
-      if (typeof children === 'string' && /^\[\d+\]$/.test(children.toString())) {
-        const sourceNumber = children.toString().match(/\[(\d+)\]/)?.[1];
-        if (sourceNumber) {
-          return <CitationLink num={sourceNumber}>{children}</CitationLink>;
-        }
-      }
-      
-      // Handle external links
-      if (href && (href.startsWith('http') || href.startsWith('https'))) {
+      if (isCitation) {
+        const citationNumber = (children as string).replace(/[\[\]]/g, '');
         return (
           <a
-            href={href}
-            className="text-[#64B5F6] hover:underline"
-            target="_blank"
-            rel="noopener noreferrer"
+            href={`#sources-cited-${citationNumber}`}
+            data-href={`#sources-cited-${citationNumber}`}
+            className="text-[#64B5F6] hover:underline cursor-pointer"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const element = document.getElementById(`sources-cited-${citationNumber}`);
+              if (element) {
+                element.scrollIntoView({ behavior: 'smooth' });
+              }
+              return false;
+            }}
           >
             {children}
           </a>
         );
       }
       
-      // Default link
+      // For regular links
+      if (href && (href.startsWith('http://') || href.startsWith('https://'))) {
+        return (
+          <a
+            href={href}
+            data-href={href}
+            className="text-[#64B5F6] hover:underline inline-block"
+            target="_blank" 
+            rel="noopener noreferrer"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              window.open(href, '_blank');
+              return false;
+            }}
+          >
+            {children}
+          </a>
+        );
+      }
+      
+      // Default link rendering
       return (
         <a
           href={href}
+          data-href={href}
           className="text-[#64B5F6] hover:underline"
-          target="_blank"
-          rel="noopener noreferrer"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (href && href.startsWith('#')) {
+              const targetId = href.substring(1);
+              const element = document.getElementById(targetId);
+              if (element) {
+                element.scrollIntoView({ behavior: 'smooth' });
+              }
+            }
+            return false;
+          }}
         >
           {children}
         </a>
@@ -450,8 +526,9 @@ const SectionCard = ({ heading, content, company, isSources = false }: {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.1 }}
+      className="pointer-events-auto"
     >
-      <Card className="border border-[#3F3F3F] bg-[#2F2F2F] rounded-xl p-3 sm:p-4 overflow-hidden">
+      <Card className="border border-[#3F3F3F] bg-[#2F2F2F] rounded-xl p-3 sm:p-4 overflow-hidden pointer-events-auto">
         <h2 
           id={isSources ? "sources-cited" : undefined}
           className="text-lg sm:text-xl font-semibold text-[#64B5F6] mb-3 pb-2 border-b border-[#3F3F3F]"
@@ -460,11 +537,13 @@ const SectionCard = ({ heading, content, company, isSources = false }: {
         </h2>
         
         {isSources ? (
-          <div className="prose prose-invert prose-sm max-w-none text-[#AFAFAF]">
+          <div className="prose prose-invert prose-sm max-w-none text-[#AFAFAF] pointer-events-auto">
             <SourcesSection content={content} />
           </div>
         ) : (
-          <RegularSection content={content} company={company} />
+          <div className="pointer-events-auto">
+            <RegularSection content={content} company={company} />
+          </div>
         )}
       </Card>
     </motion.div>
@@ -636,6 +715,57 @@ export default function CompetitorReportButton({
     }
   };
 
+  // Add effect to handle links after dialog opens
+  useEffect(() => {
+    if (modalOpen && competitorReport) {
+      // Wait for DOM to be updated with dialog content
+      setTimeout(() => {
+        // Get all links in the dialog
+        const links = document.querySelectorAll('.dialog-content a[href]');
+        
+        // Add direct click handler to each link
+        links.forEach(link => {
+          // Remove any existing handlers
+          link.removeEventListener('click', handleLinkClick);
+          
+          // Add new direct handler
+          link.addEventListener('click', handleLinkClick);
+        });
+      }, 300);
+    }
+    
+    return () => {
+      // Clean up handlers when component unmounts
+      const links = document.querySelectorAll('.dialog-content a[href]');
+      links.forEach(link => {
+        link.removeEventListener('click', handleLinkClick);
+      });
+    };
+  }, [modalOpen, competitorReport]);
+  
+  // Direct link click handler
+  const handleLinkClick = (e: Event) => {
+    e.stopPropagation();
+    e.preventDefault();
+    
+    const link = e.currentTarget as HTMLAnchorElement;
+    const href = link.getAttribute('href');
+    
+    if (href) {
+      if (href.startsWith('#')) {
+        // Internal link - scroll to element
+        const targetId = href.substring(1);
+        const targetElement = document.getElementById(targetId);
+        if (targetElement) {
+          targetElement.scrollIntoView({ behavior: 'smooth' });
+        }
+      } else if (href.startsWith('http://') || href.startsWith('https://')) {
+        // External link - open in new tab
+        window.open(href, '_blank', 'noopener,noreferrer');
+      }
+    }
+  };
+
   return (
     <div className="w-full flex flex-col items-center">
       <motion.div className="w-full" whileTap={{ scale: 0.95 }}>
@@ -691,7 +821,7 @@ export default function CompetitorReportButton({
       </motion.div>
       
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="bg-[#1C1C1C] border-[#3F3F3F] text-[#EFEFEF] p-4 rounded-lg sm:max-w-lg md:max-w-3xl lg:max-w-5xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="dialog-content bg-[#1C1C1C] border-[#3F3F3F] text-[#EFEFEF] p-4 rounded-lg sm:max-w-lg md:max-w-3xl lg:max-w-5xl max-h-[80vh] overflow-y-auto pointer-events-auto">
           <DialogHeader>
             <div className="flex items-center justify-center">
               <DialogTitle className="text-xl font-bold text-[#EFEFEF]">
@@ -700,40 +830,22 @@ export default function CompetitorReportButton({
             </div>
           </DialogHeader>
           
-          <div className="pt-2 pb-2">
+          <div className="pt-2 pb-2 pointer-events-auto" onClick={(e) => e.stopPropagation()}>
             {competitorReport ? (
-              <>
-                {/* Display the main title */}
-                {sections.length > 0 && (
-                  <h1 className="text-xl sm:text-2xl font-bold text-[#64B5F6] mt-2 mb-4 text-center">
-                    {sections[0].heading}
-                  </h1>
-                )}
-                
-                {/* Display each section in its own card */}
-                <div className="space-y-4">
-                  {sections.map((section, idx) => {
-                    // Skip the first section if it's just the title
-                    if (idx === 0 && section.content.trim() === '') {
-                      return null;
-                    }
-                    
-                    const isSources = section.heading.includes('Sources Cited');
-                    return (
-                      <SectionCard 
-                        key={idx}
-                        heading={section.heading} 
-                        content={section.content}
-                        company={company}
-                        isSources={isSources}
-                      />
-                    );
-                  })}
-                </div>
-              </>
+              <div className="space-y-3 pointer-events-auto">
+                {sections.map((section, index) => (
+                  <SectionCard
+                    key={index}
+                    heading={section.heading}
+                    content={section.content}
+                    company={company}
+                    isSources={section.heading.toLowerCase().includes('sources')}
+                  />
+                ))}
+              </div>
             ) : (
               <div className="flex justify-center items-center p-8">
-                <Spinner size={32} className="animate-spin text-[#39FF14]" />
+                <Spinner size={32} className="animate-spin text-[#FDE03B]" />
               </div>
             )}
           </div>
