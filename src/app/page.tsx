@@ -64,7 +64,8 @@ export default function HomePage() {
         {/* Header */}
         <header className="py-3">
           <h1 className="text-[46px] text-[#3F3F3F] leading-[40px]">
-            NEW BUSINESS <br />
+            VENTURE FORGE: <br />
+            NEW BUSINESS 
             TOOLKIT
           </h1>
         </header>
