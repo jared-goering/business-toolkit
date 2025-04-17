@@ -3,6 +3,7 @@
 import TargetPersonaColumn from './buttons/TargetPersonaColumn';
 import CustomerPainPointsColumn from './buttons/CustomerPainPointsColumn';
 import ValuePropositionMappingColumn from './buttons/ValuePropositionMappingColumn';
+import ExportReportButton from './buttons/ExportReportButton';
 
 import CompetitorReportButton from './buttons/CompetitorReportButton';
 import GTMStrategyButton from './buttons/GTMStrategyButton';
@@ -584,6 +585,13 @@ export default function ExtraButtons({
     </div>
   ));
 
+  // Mobile export button (full width) below grid
+  const MobileExportButton = () => (
+    <div className="w-full px-2 sm:hidden mt-4">
+      <ExportReportButton />
+    </div>
+  );
+
   return (
     <motion.section 
       className="w-full pt-10"
@@ -596,6 +604,7 @@ export default function ExtraButtons({
       {/* Mobile grid layout with LayoutGroup to maintain stability */}
       <motion.div layout="preserve-aspect" className="w-full" style={{ aspectRatio: "auto" }}>
         <MobileButtonGrid />
+        <MobileExportButton />
       </motion.div>
 
       {/* Desktop layout - hidden on mobile */}

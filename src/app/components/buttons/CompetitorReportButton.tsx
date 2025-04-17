@@ -9,6 +9,7 @@ import { Card } from '@/components/ui/card';
 import { splitMarkdownIntoSections, MarkdownSection } from '@/app/utils/markdownUtils';
 import { SectionCard } from './competitor-report/SectionCard';
 import { LoadingAnimation } from './competitor-report/LoadingAnimation';
+import { useReport } from '@/context/ReportContext';
 
 interface CompetitorReportButtonProps {
   pitch: string;
@@ -25,6 +26,7 @@ export default function CompetitorReportButton({
   customers,
   valueProposition
 }: CompetitorReportButtonProps) {
+  const { setField } = useReport();
   const [loading, setLoading] = useState(false);
   const [hoverSparkle, setHoverSparkle] = useState(false);
   const [generated, setGenerated] = useState(false);
@@ -101,6 +103,7 @@ export default function CompetitorReportButton({
 
       const data = await response.json();
       setCompetitorReport(data.competitorReport);
+      setField('competitorReport', data.competitorReport);
       setGenerated(true);
       setModalOpen(true);
     } catch (error) {

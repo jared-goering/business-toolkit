@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Masonry from 'react-masonry-css';
 import { cn } from "@/lib/utils";
+import { useReport } from '@/context/ReportContext';
 
 interface Persona {
   name: string;
@@ -36,6 +37,7 @@ export default function TargetPersonaColumn({
   problem,
   customers,
 }: TargetPersonaProps) {
+  const { setField } = useReport();
   const [personas, setPersonas] = useState<Persona[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
@@ -69,6 +71,7 @@ export default function TargetPersonaColumn({
       });
       const data = await response.json();
       setPersonas(data.personas);
+      setField('personas', data.personas);
       setModalOpen(true);
     } catch (error) {
       console.error('Error generating target personas:', error);

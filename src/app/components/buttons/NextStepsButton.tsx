@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import ReactMarkdown from 'react-markdown';
 import { Card } from '@/components/ui/card';
+import { useReport } from '@/context/ReportContext';
 
 interface NextStepsButtonProps {
   pitch: string;
@@ -262,6 +263,7 @@ export default function NextStepsButton({
   painPoints,
   personas
 }: NextStepsButtonProps) {
+  const { setField } = useReport();
   const [loading, setLoading] = useState(false);
   const [hoverSparkle, setHoverSparkle] = useState(false);
   const [generated, setGenerated] = useState(false);
@@ -340,6 +342,7 @@ export default function NextStepsButton({
       
       const data = await response.json();
       setNextSteps(data.nextSteps);
+      setField('nextSteps', data.nextSteps);
       setGenerated(true);
       setModalOpen(true);
     } catch (error) {

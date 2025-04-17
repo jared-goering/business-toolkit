@@ -1,14 +1,19 @@
 // app/page.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import StepWizard from './components/StepWizard';
 import PitchCard from './components/PitchCard';
 import ExtraButtons from './components/ExtraButtons';
 import { motion } from 'framer-motion';
+import { useReport } from '@/context/ReportContext';
+import ExportReportButton from './components/buttons/ExportReportButton';
 
 export default function HomePage() {
+  // Access report context
+  const { setField } = useReport();
+
   // Form fields
   const [company, setCompany] = useState('');
   const [problem, setProblem] = useState('');
@@ -45,6 +50,7 @@ export default function HomePage() {
       const data = await response.json();
       if (data.pitch) {
         setPitch(data.pitch);
+        setField('pitch', data.pitch);
         setShowCard(true);
       }
     } catch (error) {
@@ -58,16 +64,39 @@ export default function HomePage() {
     handleGenerate();
   };
 
+  // Keep context in sync with basic fields
+  useEffect(() => {
+    setField('company', company);
+  }, [company, setField]);
+
+  useEffect(() => {
+    setField('problem', problem);
+  }, [problem, setField]);
+
+  useEffect(() => {
+    setField('customers', customers);
+  }, [customers, setField]);
+
+  useEffect(() => {
+    setField('pitch', pitch);
+  }, [pitch, setField]);
+
   return (
     <div className="bg-dot-pattern min-h-screen text-[#EFEFEF]">
       <div className="max-w-7xl mx-auto px-4 py-20 flex flex-col space-y-16">
         {/* Header */}
-        <header className="py-3">
+        <header className="py-3 flex flex-col md:flex-row items-start md:items-center md:justify-between">
           <h1 className="text-[46px] text-[#3F3F3F] leading-[40px]">
             VENTURE FORGE: <br />
             NEW BUSINESS 
             TOOLKIT
           </h1>
+          <div className="ml-auto hidden md:block">
+            <ExportReportButton />
+          </div>
+          <div className="w-full md:hidden mt-4">
+            <ExportReportButton />
+          </div>
         </header>
 
         {/* The Step Wizard (3 cards + generate button) */}

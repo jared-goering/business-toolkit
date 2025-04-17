@@ -11,6 +11,7 @@ import remarkGfm from 'remark-gfm';
 import type { Element } from 'hast';
 import { splitMarkdownIntoSections, MarkdownSection } from '@/app/utils/markdownUtils';
 import { SourcesSection } from './gtm-strategy/SourcesSection';
+import { useReport } from '@/context/ReportContext';
 
 interface GTMStrategyButtonProps {
   pitch: string;
@@ -31,6 +32,7 @@ export default function GTMStrategyButton({
   painPoints,
   personas
 }: GTMStrategyButtonProps) {
+  const { setField } = useReport();
   const [loading, setLoading] = useState(false);
   const [hoverSparkle, setHoverSparkle] = useState(false);
   const [generated, setGenerated] = useState(false);
@@ -101,6 +103,7 @@ export default function GTMStrategyButton({
       
       const data = await response.json();
       setGtmStrategy(data.gtmStrategy);
+      setField('gtmStrategy', data.gtmStrategy);
       setSections(splitMarkdownIntoSections(data.gtmStrategy || ''));
       setGenerated(true);
       setModalOpen(true);

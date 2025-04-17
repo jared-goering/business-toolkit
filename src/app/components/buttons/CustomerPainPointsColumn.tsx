@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CaretDown, CaretUp, Sparkle, Spinner, Eye } from 'phosphor-react';
 import { motion } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useReport } from '@/context/ReportContext';
 
 interface CustomerPainPointsProps {
   pitch: string;
@@ -20,6 +21,7 @@ export default function CustomerPainPointsColumn({
   problem,
   customers,
 }: CustomerPainPointsProps) {
+  const { setField } = useReport();
   const [customerPainPoints, setCustomerPainPoints] = useState<string | null>(null);
   const [loadingPainPoints, setLoadingPainPoints] = useState(false);
   const [minimizedPain, setMinimizedPain] = useState(false);
@@ -44,6 +46,7 @@ export default function CustomerPainPointsColumn({
       const data = await response.json();
       console.log('Pain points received:', data.painPoints);
       setCustomerPainPoints(data.painPoints);
+      setField('customerPainPoints', data.painPoints);
       setModalOpen(true);
     } catch (error) {
       console.error('Error generating customer pain points:', error);

@@ -8,6 +8,7 @@ import ReactMarkdown from 'react-markdown';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import Masonry from 'react-masonry-css';
+import { useReport } from '@/context/ReportContext';
 
 interface ValuePropMappingProps {
   pitch: string;
@@ -62,6 +63,7 @@ export default function ValuePropositionMappingColumn({
   problem,
   customers,
 }: ValuePropMappingProps) {
+  const { setField } = useReport();
   const [valueMapping, setValueMapping] = useState<string | null>(null);
   const [loadingValueMapping, setLoadingValueMapping] = useState(false);
   const [minimizedValue, setMinimizedValue] = useState(false);
@@ -87,6 +89,7 @@ export default function ValuePropositionMappingColumn({
       let cleaned = removeFirstHeading(data.valueMapping || '');
       cleaned = removeEmptyLines(cleaned);
       setValueMapping(cleaned);
+      setField('valueProposition', cleaned);
       console.log('Cleaned GPT output:', cleaned);
       setModalOpen(true);
     } catch (error) {
