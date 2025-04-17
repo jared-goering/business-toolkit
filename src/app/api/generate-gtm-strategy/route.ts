@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import fetch from 'node-fetch';
 
+export const runtime = 'nodejs';  // ensure serverless runtime
+export const maxDuration = 60;    // seconds (requires Pro or Fluid Compute)
+
 export async function POST(request: Request) {
   try {
     const { pitch, company, problem, customers, valueProposition, painPoints, personas } = await request.json();
