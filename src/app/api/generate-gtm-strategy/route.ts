@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import fetch from 'node-fetch';
 
 export const runtime = 'nodejs';  // ensure serverless runtime
-export const maxDuration = 60;    // seconds (requires Pro or Fluid Compute)
+export const maxDuration = 800;    // seconds (requires Pro or Fluid Compute)
 
 export async function POST(request: Request) {
   try {
