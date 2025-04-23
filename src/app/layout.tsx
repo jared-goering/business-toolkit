@@ -40,6 +40,7 @@ export default function RootLayout({
         <ReportProvider>
           {children}
         </ReportProvider>
+        <Analytics />
       </body>
     </html>
   );
