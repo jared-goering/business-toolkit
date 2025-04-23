@@ -7,9 +7,10 @@ import { motion } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card } from '@/components/ui/card';
 import { splitMarkdownIntoSections, MarkdownSection } from '@/app/utils/markdownUtils';
-import { SectionCard } from './competitor-report/SectionCard';
+import SectionAccordion from '@/app/components/buttons/gtm-strategy/SectionAccordion';
 import { LoadingAnimation } from './competitor-report/LoadingAnimation';
 import { useReport } from '@/context/ReportContext';
+import { splitForAccordion } from '@/app/utils/splitSections';
 
 interface CompetitorReportButtonProps {
   pitch: string;
@@ -37,6 +38,7 @@ export default function CompetitorReportButton({
   const [loadingText, setLoadingText] = useState<string>("Thinking...");
   const [nextLoadingText, setNextLoadingText] = useState<string>("");
   const [isAnimating, setIsAnimating] = useState(false);
+  const { titleSection, accordionSections } = splitForAccordion(sections);
 
   // Process the markdown when competitorReport changes
   useEffect(() => {
@@ -230,17 +232,16 @@ export default function CompetitorReportButton({
           
           <div className="pt-2 pb-2 pointer-events-auto" onClick={(e) => e.stopPropagation()}>
             {competitorReport ? (
-              <div className="space-y-3 pointer-events-auto">
-                {sections.map((section, index) => (
-                  <SectionCard
-                    key={index}
-                    heading={section.heading}
-                    content={section.content}
-                    company={company}
-                    isSources={section.heading.toLowerCase().includes('sources')}
-                  />
-                ))}
-              </div>
+              <>
+                {titleSection?.heading && (
+                  <div className="mb-4">
+                    <h2 className="text-lg sm:text-xl font-semibold text-[#64B5F6]">
+                      {titleSection.heading}
+                    </h2>
+                  </div>
+                )}
+                <SectionAccordion sections={accordionSections} />
+              </>
             ) : (
               <div className="flex justify-center items-center p-8">
                 <Spinner size={32} className="animate-spin text-[#FDE03B]" />

@@ -10,8 +10,10 @@ import { Card } from '@/components/ui/card';
 import remarkGfm from 'remark-gfm';
 import type { Element } from 'hast';
 import { splitMarkdownIntoSections, MarkdownSection } from '@/app/utils/markdownUtils';
-import { SourcesSection } from './gtm-strategy/SourcesSection';
 import { useReport } from '@/context/ReportContext';
+import SectionAccordion from '@/app/components/buttons/gtm-strategy/SectionAccordion';
+import { splitForAccordion } from '@/app/utils/splitSections';
+
 
 interface GTMStrategyButtonProps {
   pitch: string;
@@ -43,6 +45,9 @@ export default function GTMStrategyButton({
   const [loadingText, setLoadingText] = useState<string>("Thinking...");
   const [nextLoadingText, setNextLoadingText] = useState<string>("");
   const [isAnimating, setIsAnimating] = useState(false);
+
+  const { titleSection, accordionSections } = splitForAccordion(sections);
+
 
   // Rotating loading text with rolodex animation
   useEffect(() => {
@@ -386,7 +391,7 @@ export default function GTMStrategyButton({
             h-[52px]
             border
             ${generated ? 'border-[#39FF14]/70' : 'border-[#39FF14]'}
-            bg-[#1C1C1C]
+            bg-[#151515]
             ${generated ? 'text-[#39FF14]/80' : 'text-[#39FF14]'}
             ${generated ? 'hover:bg-[#39FF14]/20' : 'hover:bg-[#39FF14]/30'}
             hover:border-[#39FF14]
@@ -436,7 +441,7 @@ export default function GTMStrategyButton({
       </motion.div>
       
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="dialog-content bg-[#1C1C1C] border-[#3F3F3F] text-[#EFEFEF] p-4 rounded-lg sm:max-w-lg md:max-w-3xl lg:max-w-5xl max-h-[80vh] overflow-y-auto pointer-events-auto">
+        <DialogContent className="dialog-content bg-[#151515] border-[#3F3F3F] text-[#EFEFEF] p-4 rounded-lg sm:max-w-lg md:max-w-3xl lg:max-w-5xl max-h-[80vh] overflow-y-auto pointer-events-auto">
           <DialogHeader>
             <div className="flex items-center justify-center">
               <DialogTitle className="text-xl font-bold text-[#EFEFEF]">
@@ -444,43 +449,39 @@ export default function GTMStrategyButton({
               </DialogTitle>
             </div>
           </DialogHeader>
-          
-          <div className="pt-2 pb-2 pointer-events-auto" onClick={(e) => e.stopPropagation()}>
-            {gtmStrategy ? (
-              <div className="space-y-3 pointer-events-auto">
-                {sections.map((section, index) => (
-                  <Card key={index} className="border border-[#3F3F3F] bg-[#2F2F2F] rounded-xl p-2 sm:p-3 pointer-events-auto">
-                    <div className="flex items-center mb-0">
-                      <h2 className="text-lg sm:text-xl font-semibold text-[#64B5F6]">
-                        {section.heading}
-                      </h2>
-                    </div>
-                    <div className="prose prose-invert prose-sm max-w-none pointer-events-auto">
-                      {section.heading.includes('Sources Cited') ? (
-                        <SourcesSection content={section.content} />
-                      ) : (
-                    <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}       
-                    components={markdownComponents}   
-                    >
-                    {section.content}
-                    </ReactMarkdown>
-                      )}
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <div className="flex justify-center items-center p-8">
-                <Spinner size={32} className="animate-spin text-[#39FF14]" />
-              </div>
-            )}
+
+            {/* START NEW LAYOUT */}
+          <div className="lg:flex gap-6 max-h-[70vh]">
+            {/* ── TOC ─────────────────────────── */}
+
+            {/* ── CONTENT ─────────────────────── */}
+            <div className="flex-1 overflow-y-auto pr-1">
+              {gtmStrategy ? (
+      <>
+        {titleSection?.heading && (
+          <div className="mb-4">
+            <h2 className="text-lg sm:text-xl font-semibold text-[#64B5F6]">
+              {titleSection.heading}
+            </h2>
           </div>
+        )}
+        <SectionAccordion sections={accordionSections} />
+      </>
+    ) : (
+                <div className="flex justify-center items-center p-8">
+                  <Spinner size={32} className="animate-spin text-primary" />
+                </div>
+              )}
+            </div>
+          </div>
+  {/* END NEW LAYOUT */}
+          
+         
           
           <div className="flex justify-center gap-2 sm:gap-4 mt-2 sm:mt-4">
             <Button 
               onClick={() => setModalOpen(false)}
-              className="rounded-full px-2 sm:px-3 md:px-6 py-1 sm:py-2 border border-[#3F3F3F] bg-[#1C1C1C] text-[#EFEFEF] hover:bg-[#2F2F2F] text-xs sm:text-sm md:text-base"
+              className="rounded-full px-2 sm:px-3 md:px-6 py-1 sm:py-2 border border-[#3F3F3F] bg-[#151515] text-[#EFEFEF] hover:bg-[#252525] text-xs sm:text-sm md:text-base"
             >
               Close
     </Button>

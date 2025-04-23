@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google';
 import "./globals.css";
 import { DialogLinkFixer } from "./components/DialogLinkFixer";
 import { ReportProvider } from "@/context/ReportContext";
+import { Analytics } from "@vercel/analytics/react"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
