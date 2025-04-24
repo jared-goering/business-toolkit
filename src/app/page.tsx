@@ -9,10 +9,16 @@ import ExtraButtons from './components/ExtraButtons';
 import { motion } from 'framer-motion';
 import { useReport } from '@/context/ReportContext';
 import ExportReportButton from './components/buttons/ExportReportButton';
+import ProfileButton from './components/ProfileButton';
+import SignInModal from './components/SignInModal';
+import { useAuth } from '@/context/AuthContext';
+import { db } from '@/lib/firebase';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 
 export default function HomePage() {
   // Access report context
   const { setField } = useReport();
+  const { user } = useAuth();
 
   // Form fields
   const [company, setCompany] = useState('');
@@ -23,6 +29,8 @@ export default function HomePage() {
   // Wizard logic
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [pendingGenerate, setPendingGenerate] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   // Pitch card logic
   const [showCard, setShowCard] = useState(false);
@@ -38,6 +46,14 @@ export default function HomePage() {
 
   // Generate the pitch
   const handleGenerate = async () => {
+    // Require sign-in before first AI call
+    if (!user) {
+      setShowAuthModal(true);
+      setPendingGenerate(true);
+      return;
+    }
+    setPendingGenerate(false);
+
     setLoading(true);
     setPitch('');
 
@@ -52,10 +68,27 @@ export default function HomePage() {
         setPitch(data.pitch);
         setField('pitch', data.pitch);
         setShowCard(true);
+
+        // Set loading false before persisting to Firestore so UI updates promptly
+        setLoading(false);
+
+        // Persist to Firestore for signed-in users (non-blocking)
+        if (user) {
+          addDoc(collection(db, 'users', user.uid, 'businesses'), {
+            company,
+            problem,
+            customers,
+            pitch: data.pitch,
+            createdAt: serverTimestamp(),
+          }).catch((err) => {
+            console.error('Error saving pitch to Firestore:', err);
+          });
+        }
       }
     } catch (error) {
       console.error('Error generating pitch:', error);
     } finally {
+      // loading already reset above; keep safeguard in case of early error
       setLoading(false);
     }
   };
@@ -63,6 +96,13 @@ export default function HomePage() {
   const handleRegenerate = () => {
     handleGenerate();
   };
+
+  // If we were waiting for auth and now have a user, automatically generate
+  useEffect(() => {
+    if (pendingGenerate && user) {
+      handleGenerate();
+    }
+  }, [pendingGenerate, user]);
 
   // Keep context in sync with basic fields
   useEffect(() => {
@@ -85,7 +125,10 @@ export default function HomePage() {
     <div className="bg-dot-pattern min-h-screen text-[#EFEFEF]">
       <div className="max-w-7xl mx-auto px-4 py-20 flex flex-col space-y-16">
         {/* Header */}
-        <header className="py-3 flex flex-col md:flex-row items-start md:items-center md:justify-between">
+        <header className="py-3 flex flex-col md:flex-row items-start md:items-center md:justify-between gap-2">
+          <div className="self-start">
+            <ProfileButton onNeedAuth={() => setShowAuthModal(true)} />
+          </div>
           <h1 className="text-[46px] text-[#3F3F3F] leading-[40px]">
             VENTURE FORGE: <br />
             NEW BUSINESS 
@@ -182,6 +225,9 @@ export default function HomePage() {
             )}
           </>
         )}
+
+        {/* Sign-in modal */}
+        <SignInModal open={showAuthModal} onOpenChange={setShowAuthModal} />
       </div>
     </div>
   );

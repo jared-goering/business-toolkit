@@ -5,6 +5,7 @@ import "./globals.css";
 import { DialogLinkFixer } from "./components/DialogLinkFixer";
 import { ReportProvider } from "@/context/ReportContext";
 import { Analytics } from "@vercel/analytics/react"
+import { AuthProvider } from "@/context/AuthContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,9 +38,11 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <DialogLinkFixer />
-        <ReportProvider>
-          {children}
-        </ReportProvider>
+        <AuthProvider>
+          <ReportProvider>
+            {children}
+          </ReportProvider>
+        </AuthProvider>
         <Analytics />
       </body>
     </html>
