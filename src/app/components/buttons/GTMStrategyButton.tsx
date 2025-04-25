@@ -23,6 +23,7 @@ interface GTMStrategyButtonProps {
   valueProposition: string;
   painPoints: string[];
   personas: any[];
+  initialGtmStrategy?: string;
 }
 
 export default function GTMStrategyButton({
@@ -32,19 +33,27 @@ export default function GTMStrategyButton({
   customers,
   valueProposition,
   painPoints,
-  personas
+  personas,
+  initialGtmStrategy,
 }: GTMStrategyButtonProps) {
   const { setField } = useReport();
   const [loading, setLoading] = useState(false);
   const [hoverSparkle, setHoverSparkle] = useState(false);
-  const [generated, setGenerated] = useState(false);
+  const [generated, setGenerated] = useState<boolean>(!!initialGtmStrategy);
   const [hoverViewResults, setHoverViewResults] = useState(false);
-  const [gtmStrategy, setGtmStrategy] = useState<string>('');
+  const [gtmStrategy, setGtmStrategy] = useState<string>(initialGtmStrategy || '');
   const [modalOpen, setModalOpen] = useState(false);
   const [sections, setSections] = useState<MarkdownSection[]>([]);
   const [loadingText, setLoadingText] = useState<string>("Thinking...");
   const [nextLoadingText, setNextLoadingText] = useState<string>("");
   const [isAnimating, setIsAnimating] = useState(false);
+
+  // Populate sections if preloaded gtmStrategy exists
+  useEffect(() => {
+    if (gtmStrategy && sections.length === 0) {
+      setSections(splitMarkdownIntoSections(gtmStrategy));
+    }
+  }, [gtmStrategy, sections.length]);
 
   const { titleSection, accordionSections } = splitForAccordion(sections);
 

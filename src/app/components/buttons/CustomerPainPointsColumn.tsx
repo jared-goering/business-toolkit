@@ -13,6 +13,7 @@ interface CustomerPainPointsProps {
   company: string;
   problem: string;
   customers: string;
+  initialPainPoints?: string | string[]; // pre-loaded pain points if saved
 }
 
 export default function CustomerPainPointsColumn({
@@ -20,9 +21,18 @@ export default function CustomerPainPointsColumn({
   company,
   problem,
   customers,
+  initialPainPoints,
 }: CustomerPainPointsProps) {
   const { setField } = useReport();
-  const [customerPainPoints, setCustomerPainPoints] = useState<string | null>(null);
+  // Normalize initial input: treat empty array or empty string as null
+  const normalize = (v?: string | string[] | null) => {
+    if (!v) return null;
+    if (Array.isArray(v)) return v.length ? v : null;
+    if (typeof v === 'string') return v.trim().length ? v : null;
+    return null;
+  };
+
+  const [customerPainPoints, setCustomerPainPoints] = useState<string | string[] | null>(normalize(initialPainPoints));
   const [loadingPainPoints, setLoadingPainPoints] = useState(false);
   const [minimizedPain, setMinimizedPain] = useState(false);
   const [hoverPainPointsSparkle, setHoverPainPointsSparkle] = useState(false);

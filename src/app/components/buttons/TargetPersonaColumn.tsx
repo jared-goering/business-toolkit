@@ -22,6 +22,7 @@ interface TargetPersonaProps {
   company: string;
   problem: string;
   customers: string;
+  initialPersonas?: Persona[];
 }
 
 function reorder(array: Persona[], fromIndex: number, toIndex: number) {
@@ -36,9 +37,12 @@ export default function TargetPersonaColumn({
   company,
   problem,
   customers,
+  initialPersonas,
 }: TargetPersonaProps) {
   const { setField } = useReport();
-  const [personas, setPersonas] = useState<Persona[] | null>(null);
+  const [personas, setPersonas] = useState<Persona[] | null>(
+    initialPersonas && initialPersonas.length > 0 ? initialPersonas : null
+  );
   const [loading, setLoading] = useState(false);
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const [touchStartY, setTouchStartY] = useState<number | null>(null);

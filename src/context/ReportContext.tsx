@@ -22,6 +22,7 @@ interface ReportContextValue extends ReportData {
   setField: (field: keyof ReportData, value: any) => void;
   setMultiple: (data: Partial<ReportData>) => void;
   reset: () => void;
+  setCurrentDoc: (id: string | null) => void;
 }
 
 const ReportContext = createContext<ReportContextValue | undefined>(undefined);
@@ -38,6 +39,8 @@ export const ReportProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Track Firestore document ID for the current business session
   const [docId, setDocId] = useState<string | null>(null);
+  // Keep a mutable ref in sync so callbacks always see the latest ID
+  const docIdRef = React.useRef<string | null>(null);
 
   // Helper to persist updates to Firestore (non-blocking)
   const persist = useCallback(
@@ -45,22 +48,23 @@ export const ReportProvider = ({ children }: { children: React.ReactNode }) => {
       if (!user) return; // no persistence if not signed in
 
       try {
-        if (!docId) {
+        if (!docIdRef.current) {
           // First time: create a new doc under user's businesses collection
           const docRef = await addDoc(collection(db, 'users', user.uid, 'businesses'), {
             ...updates,
             createdAt: serverTimestamp(),
           });
+          docIdRef.current = docRef.id;
           setDocId(docRef.id);
         } else {
-          const docRef = doc(db, 'users', user.uid, 'businesses', docId);
+          const docRef = doc(db, 'users', user.uid, 'businesses', docIdRef.current);
           await updateDoc(docRef, updates);
         }
       } catch (err) {
         console.error('Error persisting report data:', err);
       }
     },
-    [user, docId]
+    [user]
   );
 
   // Stable callbacks to avoid recreating on every render
@@ -68,20 +72,20 @@ export const ReportProvider = ({ children }: { children: React.ReactNode }) => {
     setData((prev) => ({ ...prev, [field]: value }));
 
     // Skip creating a new doc for empty initial values
-    if (!docId) {
+    if (!docIdRef.current) {
       if (typeof value === 'string' && value.trim() === '') return;
       if (Array.isArray(value) && value.length === 0) return;
     }
 
     // Fire-and-forget persistence
     persist({ [field]: value } as Partial<ReportData>);
-  }, [persist, docId]);
+  }, [persist]);
 
   const setMultiple = useCallback<ReportContextValue['setMultiple']>((updates) => {
     setData((prev) => ({ ...prev, ...updates }));
 
     // Guard: avoid creating blank doc
-    if (!docId) {
+    if (!docIdRef.current) {
       const hasData = Object.values(updates).some((v) => {
         if (typeof v === 'string') return v.trim().length > 0;
         if (Array.isArray(v)) return v.length > 0;
@@ -91,17 +95,23 @@ export const ReportProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     persist(updates);
-  }, [persist, docId]);
+  }, [persist]);
+
+  const setCurrentDoc = useCallback((id: string | null) => {
+    docIdRef.current = id;
+    setDocId(id);
+  }, []);
 
   const reset = useCallback(() => {
     setData({ company: '', problem: '', customers: '', pitch: '' });
+    docIdRef.current = null;
     setDocId(null);
   }, []);
 
   // Memoize context value so that consumers only re-render when data changes
   const contextValue = useMemo<ReportContextValue>(
-    () => ({ ...data, setField, setMultiple, reset }),
-    [data, setField, setMultiple, reset]
+    () => ({ ...data, setField, setMultiple, reset, setCurrentDoc }),
+    [data, setField, setMultiple, reset, setCurrentDoc]
   );
 
   return (

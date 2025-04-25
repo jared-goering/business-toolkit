@@ -18,6 +18,7 @@ interface NextStepsButtonProps {
   valueProposition: string;
   painPoints: string[];
   personas: any[];
+  initialNextSteps?: string; // pre-loaded steps if already saved
 }
 
 interface NextStep {
@@ -261,14 +262,15 @@ export default function NextStepsButton({
   customers,
   valueProposition,
   painPoints,
-  personas
+  personas,
+  initialNextSteps,
 }: NextStepsButtonProps) {
   const { setField } = useReport();
   const [loading, setLoading] = useState(false);
   const [hoverSparkle, setHoverSparkle] = useState(false);
-  const [generated, setGenerated] = useState(false);
+  const [nextSteps, setNextSteps] = useState<string>(initialNextSteps || '');
+  const [generated, setGenerated] = useState<boolean>(!!initialNextSteps);
   const [hoverViewResults, setHoverViewResults] = useState(false);
-  const [nextSteps, setNextSteps] = useState<string>('');
   const [parsedSteps, setParsedSteps] = useState<NextStep[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [loadingText, setLoadingText] = useState<string>("Thinking...");

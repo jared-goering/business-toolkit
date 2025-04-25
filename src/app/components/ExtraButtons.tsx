@@ -22,6 +22,9 @@ interface ExtraButtonsProps {
   valueProposition: string;
   painPoints: string[];
   personas: string[];
+  nextSteps: string;
+  gtmStrategy: string;
+  competitorReport: string;
 }
 
 export default function ExtraButtons({
@@ -31,7 +34,10 @@ export default function ExtraButtons({
   customers,
   valueProposition,
   painPoints,
-  personas
+  personas,
+  nextSteps,
+  gtmStrategy,
+  competitorReport,
 }: ExtraButtonsProps) {
   // Refs for container components
   const valuePropContainerRef = useRef<HTMLDivElement | null>(null);
@@ -390,6 +396,18 @@ export default function ExtraButtons({
     }
   }, [buttonRefs]);
 
+  // Keep generatedStates perfectly in sync with props
+  useEffect(() => {
+    setGeneratedStates({
+      valueProp: !!valueProposition?.trim(),
+      painPoints: Array.isArray(painPoints) && painPoints.length > 0,
+      targetPersona: Array.isArray(personas) && personas.length > 0,
+      nextSteps: !!nextSteps?.trim(),
+      gtmStrategy: !!gtmStrategy?.trim(),
+      competitorReport: !!competitorReport?.trim(),
+    } as Record<ButtonRefKey, boolean>);
+  }, [valueProposition, painPoints, personas, nextSteps, gtmStrategy, competitorReport]);
+
   // Mobile button component to isolate state changes
   const MobileButton = React.memo(({ 
     type, 
@@ -621,6 +639,7 @@ export default function ExtraButtons({
                 company={company}
                 problem={problem}
                 customers={customers}
+                valueProposition={valueProposition}
               />
         </div>
             <div ref={nextStepsContainerRef} className="w-full">
@@ -632,6 +651,7 @@ export default function ExtraButtons({
                 valueProposition={valueProposition}
                 painPoints={painPoints}
                 personas={personas}
+                initialNextSteps={nextSteps}
               />
 </div>
           </motion.div>
@@ -647,6 +667,7 @@ export default function ExtraButtons({
                 company={company}
                 problem={problem}
                 customers={customers}
+                initialPainPoints={painPoints}
               />
             </div>
             <div ref={gtmStrategyContainerRef} className="w-full">
@@ -658,6 +679,7 @@ export default function ExtraButtons({
                 valueProposition={valueProposition}
                 painPoints={painPoints}
                 personas={personas}
+                initialGtmStrategy={gtmStrategy}
               />
             </div>
           </motion.div>
@@ -673,6 +695,7 @@ export default function ExtraButtons({
                 company={company}
                 problem={problem}
                 customers={customers}
+                initialPersonas={personas as any}
               />
             </div>
             <div ref={competitorReportContainerRef} className="w-full">
@@ -682,6 +705,7 @@ export default function ExtraButtons({
                 problem={problem}
                 customers={customers}
                 valueProposition={valueProposition}
+                initialCompetitorReport={competitorReport}
               />
             </div>
           </motion.div>

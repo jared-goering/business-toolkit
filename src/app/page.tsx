@@ -17,7 +17,7 @@ import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 
 export default function HomePage() {
   // Access report context
-  const { setField } = useReport();
+  const { setField, setMultiple, setCurrentDoc } = useReport();
   const { user } = useAuth();
 
   // Form fields
@@ -25,6 +25,12 @@ export default function HomePage() {
   const [problem, setProblem] = useState('');
   const [customers, setCustomers] = useState('');
   const [pitch, setPitch] = useState('');
+  const [valueProposition, setValueProposition] = useState('');
+  const [painPoints, setPainPoints] = useState<string[]>([]);
+  const [personas, setPersonas] = useState<any[]>([]);
+  const [nextSteps, setNextSteps] = useState('');
+  const [gtmStrategy, setGtmStrategy] = useState('');
+  const [competitorReport, setCompetitorReport] = useState('');
 
   // Wizard logic
   const [currentStep, setCurrentStep] = useState(1);
@@ -37,6 +43,72 @@ export default function HomePage() {
 
   // Show or hide the 3 new buttons under the pitch card
   const [showExtraButtons, setShowExtraButtons] = useState(false);
+
+  // Load a previously saved business into the UI
+  const loadBusiness = (d: any) => {
+    const {
+      company: comp = '',
+      problem: prob = '',
+      customers: cust = '',
+      pitch: savedPitch = '',
+      valueProposition: vp = '',
+      customerPainPoints = [],
+      personas: ps = [],
+      nextSteps: ns = '',
+      gtmStrategy: gts = '',
+      competitorReport: cr = '',
+      _docId,
+    } = d || {};
+
+    setCompany(comp);
+    setProblem(prob);
+    setCustomers(cust);
+    setPitch(savedPitch);
+    setValueProposition(vp || '');
+    setPainPoints((customerPainPoints as any) || []);
+    setPersonas(ps || []);
+    setNextSteps(ns || '');
+    setGtmStrategy(gts || '');
+    setCompetitorReport(cr || '');
+
+    // Set current doc immediately to avoid creating duplicate doc before persist
+    if (_docId) {
+      setCurrentDoc(_docId);
+    }
+
+    // Reveal card & extra buttons if pitch present
+    setShowCard(!!savedPitch);
+    if (savedPitch) {
+      setShowExtraButtons(true);
+    }
+
+    const updateData = {
+      company: comp,
+      problem: prob,
+      customers: cust,
+      pitch: savedPitch,
+      valueProposition: vp,
+      customerPainPoints,
+      personas: ps,
+      nextSteps: ns,
+      gtmStrategy: gts,
+      competitorReport: cr,
+    };
+
+    if (_docId) {
+      // delay to next tick so setCurrentDoc state applies first
+      setTimeout(() => setMultiple(updateData), 0);
+    } else {
+      setMultiple(updateData);
+    }
+
+    // if we have a pitch, jump straight to step-4
+    if (savedPitch) {
+      setCurrentStep(4);
+    } else if (comp && prob && cust) {
+      setCurrentStep(4);
+    }
+  };
 
   // Called when user clicks "Looks Good" in the PitchCard
   const handleLooksGood = () => {
@@ -72,18 +144,7 @@ export default function HomePage() {
         // Set loading false before persisting to Firestore so UI updates promptly
         setLoading(false);
 
-        // Persist to Firestore for signed-in users (non-blocking)
-        if (user) {
-          addDoc(collection(db, 'users', user.uid, 'businesses'), {
-            company,
-            problem,
-            customers,
-            pitch: data.pitch,
-            createdAt: serverTimestamp(),
-          }).catch((err) => {
-            console.error('Error saving pitch to Firestore:', err);
-          });
-        }
+        // No manual addDoc here; ReportContext persistence handles create/update
       }
     } catch (error) {
       console.error('Error generating pitch:', error);
@@ -127,7 +188,7 @@ export default function HomePage() {
         {/* Header */}
         <header className="py-3 flex flex-col md:flex-row items-start md:items-center md:justify-between gap-2">
           <div className="self-start">
-            <ProfileButton onNeedAuth={() => setShowAuthModal(true)} />
+            <ProfileButton onNeedAuth={() => setShowAuthModal(true)} onSelectBusiness={loadBusiness} />
           </div>
           <h1 className="text-[46px] text-[#3F3F3F] leading-[40px]">
             VENTURE FORGE: <br />
@@ -217,9 +278,12 @@ export default function HomePage() {
                   company={company}
                   problem={problem}
                   customers={customers}
-                  valueProposition=""
-                  painPoints={[]}
-                  personas={[]}
+                  valueProposition={valueProposition}
+                  painPoints={painPoints}
+                  personas={personas}
+                  nextSteps={nextSteps}
+                  gtmStrategy={gtmStrategy}
+                  competitorReport={competitorReport}
                 />
               </motion.div>
             )}

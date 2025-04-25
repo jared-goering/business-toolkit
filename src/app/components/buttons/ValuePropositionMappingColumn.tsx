@@ -15,6 +15,7 @@ interface ValuePropMappingProps {
   company: string;
   problem: string;
   customers: string;
+  valueProposition?: string; // pre-loaded mapping if already saved
 }
 
 // Remove top heading if it exists
@@ -62,9 +63,10 @@ export default function ValuePropositionMappingColumn({
   company,
   problem,
   customers,
+  valueProposition,
 }: ValuePropMappingProps) {
   const { setField } = useReport();
-  const [valueMapping, setValueMapping] = useState<string | null>(null);
+  const [valueMapping, setValueMapping] = useState<string | null>(valueProposition ?? null);
   const [loadingValueMapping, setLoadingValueMapping] = useState(false);
   const [minimizedValue, setMinimizedValue] = useState(false);
   const [hoverValuePropSparkle, setHoverValuePropSparkle] = useState(false);

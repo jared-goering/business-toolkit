@@ -18,6 +18,7 @@ interface CompetitorReportButtonProps {
   problem: string;
   customers: string;
   valueProposition: string;
+  initialCompetitorReport?: string;
 }
 
 export default function CompetitorReportButton({
@@ -25,14 +26,15 @@ export default function CompetitorReportButton({
   company,
   problem,
   customers,
-  valueProposition
+  valueProposition,
+  initialCompetitorReport,
 }: CompetitorReportButtonProps) {
   const { setField } = useReport();
   const [loading, setLoading] = useState(false);
   const [hoverSparkle, setHoverSparkle] = useState(false);
-  const [generated, setGenerated] = useState(false);
+  const [generated, setGenerated] = useState<boolean>(!!initialCompetitorReport);
   const [hoverViewResults, setHoverViewResults] = useState(false);
-  const [competitorReport, setCompetitorReport] = useState<string>('');
+  const [competitorReport, setCompetitorReport] = useState<string>(initialCompetitorReport || '');
   const [modalOpen, setModalOpen] = useState(false);
   const [sections, setSections] = useState<MarkdownSection[]>([]);
   const [loadingText, setLoadingText] = useState<string>("Thinking...");
