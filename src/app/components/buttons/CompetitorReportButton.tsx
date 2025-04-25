@@ -40,6 +40,7 @@ export default function CompetitorReportButton({
   const [loadingText, setLoadingText] = useState<string>("Thinking...");
   const [nextLoadingText, setNextLoadingText] = useState<string>("");
   const [isAnimating, setIsAnimating] = useState(false);
+  const [infoModalOpen, setInfoModalOpen] = useState(false);
   const { titleSection, accordionSections } = splitForAccordion(sections);
 
   // Process the markdown when competitorReport changes
@@ -81,12 +82,8 @@ export default function CompetitorReportButton({
     return () => clearInterval(intervalId);
   }, [loading]);
 
-  const handleGenerateCompetitorReport = async () => {
-    if (generated) {
-      setModalOpen(true);
-      return;
-    }
-
+  // Extracted generation logic
+  const doGenerateCompetitorReport = async () => {
     setLoading(true);
     try {
       const response = await fetch('/api/generate-competitor-report', {
@@ -115,6 +112,14 @@ export default function CompetitorReportButton({
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGenerateCompetitorReport = () => {
+    if (generated) {
+      setModalOpen(true);
+      return;
+    }
+    setInfoModalOpen(true);
   };
 
   // Add effect to handle links after dialog opens
@@ -258,6 +263,37 @@ export default function CompetitorReportButton({
             >
               Close
     </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── INFO / CONFIRMATION MODAL ───────────────────────────── */}
+      <Dialog open={infoModalOpen} onOpenChange={setInfoModalOpen}>
+        <DialogContent className="bg-[#1C1C1C] border-[#3F3F3F] text-[#EFEFEF] p-6 rounded-lg max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-semibold text-center text-[#EFEFEF]">
+              Generate Competitor Report?
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-[#CCCCCC] mt-2 mb-4">
+            Our AI agent will analyze competitors using public data. This process can take <span className="font-semibold text-[#39FF14]">2-3&nbsp;minutes</span> to complete.
+          </p>
+          <div className="flex justify-center gap-3 mt-4">
+            <Button
+              onClick={() => setInfoModalOpen(false)}
+              className="rounded-full px-4 py-2 border border-[#3F3F3F] bg-[#252525] text-[#EFEFEF] hover:bg-[#303030] text-sm"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                setInfoModalOpen(false);
+                doGenerateCompetitorReport();
+              }}
+              className="rounded-full px-4 py-2 bg-[#39FF14] text-black hover:bg-[#39FF14]/90 text-sm font-semibold"
+            >
+              Continue
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

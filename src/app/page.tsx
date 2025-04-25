@@ -17,7 +17,7 @@ import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 
 export default function HomePage() {
   // Access report context
-  const { setField, setMultiple, setCurrentDoc } = useReport();
+  const { setField, setMultiple, setCurrentDoc, reset: resetReport } = useReport();
   const { user } = useAuth();
 
   // Form fields
@@ -182,23 +182,56 @@ export default function HomePage() {
     setField('pitch', pitch);
   }, [pitch, setField]);
 
+  // Reset everything to start a new business session
+  const handleNew = () => {
+    // Clear local component states
+    setCompany('');
+    setProblem('');
+    setCustomers('');
+    setPitch('');
+    setValueProposition('');
+    setPainPoints([]);
+    setPersonas([]);
+    setNextSteps('');
+    setGtmStrategy('');
+    setCompetitorReport('');
+
+    // Reset wizard & UI states
+    setCurrentStep(1);
+    setShowCard(false);
+    setShowExtraButtons(false);
+    setLoading(false);
+    setPendingGenerate(false);
+
+    // Clear current doc / context state
+    setCurrentDoc(null);
+    resetReport();
+  };
+
   return (
     <div className="bg-dot-pattern min-h-screen text-[#EFEFEF]">
       <div className="max-w-7xl mx-auto px-4 py-20 flex flex-col space-y-16">
         {/* Header */}
         <header className="py-3 flex flex-col md:flex-row items-start md:items-center md:justify-between gap-2">
-          <div className="self-start">
-            <ProfileButton onNeedAuth={() => setShowAuthModal(true)} onSelectBusiness={loadBusiness} />
-          </div>
           <h1 className="text-[46px] text-[#3F3F3F] leading-[40px]">
             VENTURE FORGE: <br />
             NEW BUSINESS 
             TOOLKIT
           </h1>
-          <div className="ml-auto hidden md:block">
+          <div className="ml-auto hidden md:flex items-center gap-2">
+            <ProfileButton
+              onNeedAuth={() => setShowAuthModal(true)}
+              onSelectBusiness={loadBusiness}
+              onNew={handleNew}
+            />
             <ExportReportButton />
           </div>
-          <div className="w-full md:hidden mt-4">
+          <div className="w-full flex justify-end items-center gap-2 md:hidden mt-4">
+            <ProfileButton
+              onNeedAuth={() => setShowAuthModal(true)}
+              onSelectBusiness={loadBusiness}
+              onNew={handleNew}
+            />
             <ExportReportButton />
           </div>
         </header>

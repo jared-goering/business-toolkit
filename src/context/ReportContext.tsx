@@ -16,6 +16,10 @@ export interface ReportData {
   nextSteps?: string;
   gtmStrategy?: string;
   competitorReport?: string;
+  /** The display name of the signed-in user who created the business entry */
+  userName?: string;
+  /** The e-mail of the signed-in user who created the business entry */
+  userEmail?: string;
 }
 
 interface ReportContextValue extends ReportData {
@@ -52,13 +56,21 @@ export const ReportProvider = ({ children }: { children: React.ReactNode }) => {
           // First time: create a new doc under user's businesses collection
           const docRef = await addDoc(collection(db, 'users', user.uid, 'businesses'), {
             ...updates,
+            // Persist basic user metadata alongside business record for easy querying
+            userName: user.displayName || 'Anonymous',
+            userEmail: user.email || '',
             createdAt: serverTimestamp(),
           });
           docIdRef.current = docRef.id;
           setDocId(docRef.id);
         } else {
           const docRef = doc(db, 'users', user.uid, 'businesses', docIdRef.current);
-          await updateDoc(docRef, updates);
+          await updateDoc(docRef, {
+            ...updates,
+            // Ensure user meta fields remain present / up-to-date
+            userName: user.displayName || 'Anonymous',
+            userEmail: user.email || '',
+          });
         }
       } catch (err) {
         console.error('Error persisting report data:', err);

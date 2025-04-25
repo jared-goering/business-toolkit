@@ -163,8 +163,8 @@ export default function ExportReportButton() {
       disabled={loading || !ready}
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
-      className={`w-full rounded-full px-6 py-3 h-[52px] flex items-center justify-center transition-colors duration-200
-        ${ready ? 'border-[#FDE03B] bg-[#1C1C1C] text-[#FDE03B] hover:bg-[#FDE03B]/10' : 'border-gray-600 bg-[#2F2F2F] text-gray-500 cursor-not-allowed'}`}
+      className={`w-full rounded-full px-6 py-3 h-[52px] flex items-center justify-center transition-all duration-200
+        ${ready ? 'border-[#FDE03B] bg-[#1C1C1C] text-[#FDE03B] hover:bg-[#FDE03B]/10 hover:ring-1 hover:ring-[#FDE03B]/60 hover:ring-offset-0' : 'border-gray-600 bg-[#2F2F2F] text-gray-500 cursor-not-allowed'}`}
     >
       {loading ? (
         <span className="flex items-center">

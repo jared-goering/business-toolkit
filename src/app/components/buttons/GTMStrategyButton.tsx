@@ -47,6 +47,8 @@ export default function GTMStrategyButton({
   const [loadingText, setLoadingText] = useState<string>("Thinking...");
   const [nextLoadingText, setNextLoadingText] = useState<string>("");
   const [isAnimating, setIsAnimating] = useState(false);
+  // Show an informational modal before launching the (long-running) generation request
+  const [infoModalOpen, setInfoModalOpen] = useState(false);
 
   // Populate sections if preloaded gtmStrategy exists
   useEffect(() => {
@@ -89,12 +91,8 @@ export default function GTMStrategyButton({
     return () => clearInterval(intervalId);
   }, [loading]);
 
-  const handleGenerateGTMStrategy = async () => {
-    if (generated) {
-      setModalOpen(true);
-      return;
-    }
-    
+  // Actual network request extracted so it can be triggered *after* user confirmation
+  const doGenerateGTMStrategy = async () => {
     setLoading(true);
     try {
       const response = await fetch('/api/generate-gtm-strategy', {
@@ -126,6 +124,15 @@ export default function GTMStrategyButton({
     } finally {
       setLoading(false);
     }
+  };
+
+  // Initial button click handler – either shows results (already generated) or opens the info modal
+  const handleGenerateGTMStrategy = () => {
+    if (generated) {
+      setModalOpen(true);
+      return;
+    }
+    setInfoModalOpen(true);
   };
 
   // The custom components for ReactMarkdown
@@ -494,6 +501,37 @@ export default function GTMStrategyButton({
             >
               Close
     </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── INFO / CONFIRMATION MODAL ───────────────────────────── */}
+      <Dialog open={infoModalOpen} onOpenChange={setInfoModalOpen}>
+        <DialogContent className="bg-[#151515] border-[#3F3F3F] text-[#EFEFEF] p-6 rounded-lg max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-semibold text-center text-[#EFEFEF]">
+              Generate Detailed GTM Strategy?
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-[#CCCCCC] mt-2 mb-4">
+            Our AI agent will research public sources and craft an in-depth go-to-market strategy for your business. This process can take <span className="font-semibold text-[#39FF14]">2-3&nbsp;minutes</span> to complete.
+          </p>
+          <div className="flex justify-center gap-3 mt-4">
+            <Button
+              onClick={() => setInfoModalOpen(false)}
+              className="rounded-full px-4 py-2 border border-[#3F3F3F] bg-[#252525] text-[#EFEFEF] hover:bg-[#303030] text-sm"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                setInfoModalOpen(false);
+                doGenerateGTMStrategy();
+              }}
+              className="rounded-full px-4 py-2 bg-[#39FF14] text-black hover:bg-[#39FF14]/90 text-sm font-semibold"
+            >
+              Continue
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
