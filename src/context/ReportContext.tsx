@@ -41,33 +41,40 @@ export const ReportProvider = ({ children }: { children: React.ReactNode }) => {
     pitch: '',
   });
 
-  // Track Firestore document ID for the current business session
   const [docId, setDocId] = useState<string | null>(null);
-  // Keep a mutable ref in sync so callbacks always see the latest ID
+  // Refs that keep latest values without triggering re-creations of callbacks
   const docIdRef = React.useRef<string | null>(null);
+  const latestDataRef = React.useRef<ReportData>(data);
+
+  // Keep latest data in ref to allow stable persist function
+  React.useEffect(() => {
+    latestDataRef.current = data;
+  }, [data]);
 
   // Helper to persist updates to Firestore (non-blocking)
   const persist = useCallback(
     async (updates: Partial<ReportData>) => {
-      if (!user) return; // no persistence if not signed in
+      if (!user) return; // No persistence if not signed in yet
 
       try {
         if (!docIdRef.current) {
-          // First time: create a new doc under user's businesses collection
-          const docRef = await addDoc(collection(db, 'users', user.uid, 'businesses'), {
+          // On the very first save we include ALL existing data so earlier answers are not lost
+          const initialPayload = {
+            ...latestDataRef.current,
             ...updates,
-            // Persist basic user metadata alongside business record for easy querying
             userName: user.displayName || 'Anonymous',
             userEmail: user.email || '',
             createdAt: serverTimestamp(),
-          });
+          } as ReportData;
+
+          const docRef = await addDoc(collection(db, 'users', user.uid, 'businesses'), initialPayload);
           docIdRef.current = docRef.id;
           setDocId(docRef.id);
         } else {
           const docRef = doc(db, 'users', user.uid, 'businesses', docIdRef.current);
           await updateDoc(docRef, {
             ...updates,
-            // Ensure user meta fields remain present / up-to-date
+            // Keep user metadata up-to-date
             userName: user.displayName || 'Anonymous',
             userEmail: user.email || '',
           });
